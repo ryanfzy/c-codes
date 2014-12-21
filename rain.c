@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <windows.h>
-#include <conio.h>
 
 #define gotoxy(h,x,y) SetConsoleCursorPosition((h), (COORD){(x),(y)})
 #define setColor(h,c) SetConsoleTextAttribute((h), (c))
@@ -29,8 +28,6 @@ PCONSOLE_SCREEN_BUFFER_INFO pbuffer_info;
 
 semaphore main_sem;
 semaphore mutex;
-int cs = 33;
-int ce = 127;
 
 int main(int argc, char *argv[]){
 	COORD coord;
@@ -44,7 +41,7 @@ int main(int argc, char *argv[]){
 	//printf("dwMaximumWindowSize:(%d,%d)\n", coord.X, coord.Y);
 
 	srand(time(NULL));
-	width_max = coord.X-2; 
+	width_max = coord.X; 
 	height_max = coord.Y;
 
 	main_sem = create(0);
@@ -77,8 +74,8 @@ void* rain_thread(void *p){
 
 	while(1){
 		Sleep(tmpdelay);
-		j = rand() % ce;
-		if(j < cs) j += cs;
+		j = rand() % CE;
+		if(j < CS) j += CS;
 		for(i = t.start; i< t.end+RAIN_LEN; i++){
 			wait(mutex);
 			if(i < t.end){
@@ -87,8 +84,8 @@ void* rain_thread(void *p){
 				printf("%c", c1);
 
 				c4 = c3; c3 = c2; c2 = c1; c1 = j;
-				j = rand() % ce;;
-				if(j < cs) j += cs;
+				j = rand() % CE;;
+				if(j < CS) j += CS;
 
 				if(i > 0){
 					setColor(handle, 10);
