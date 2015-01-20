@@ -22,6 +22,7 @@ typedef struct _RainThread{
 } RainThread;
 
 void* rain_thread(void*);
+void rain_randomise(RainThread *rain_thread);
 
 HANDLE handle;
 PCONSOLE_SCREEN_BUFFER_INFO pbuffer_info;
@@ -50,17 +51,28 @@ int main(int argc, char *argv[]){
 	for(i = 0; i < width_max; i++){
 		RainThread *r = (RainThread*)malloc(sizeof(RainThread));
 		r->pos = i;
+		rain_randomise(r);
+		/*
 		r->delay = rand() % (i+1) * 100;
 		r->start = rand() % HEIGHT;
 		if(r->start > HEIGHT/2) r->start = 0; 
 		r->end = rand() % HEIGHT;
 		if(r->end <= r->start) r->end = HEIGHT;
+		*/
 		CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)rain_thread, (void*)r, 0, NULL);
 	}
 
 	wait(main_sem);
 
 	return 0;
+}
+
+void rain_randomise(RainThread *r){
+	r->delay = rand() % (r->pos+1) * 100;
+	r->start = rand() % HEIGHT;
+	if(r->start > HEIGHT/2) r->start = 0; 
+	r->end = rand() % HEIGHT;
+	if(r->end <= r->start) r->end = HEIGHT;
 }
 
 void* rain_thread(void *p){
@@ -73,7 +85,8 @@ void* rain_thread(void *p){
 	tmpdelay = t.delay;
 
 	while(1){
-		Sleep(tmpdelay);
+		//Sleep(tmpdelay);
+		Sleep(t.delay);
 		j = rand() % CE;
 		if(j < CS) j += CS;
 		for(i = t.start; i< t.end+RAIN_LEN; i++){
@@ -132,6 +145,9 @@ void* rain_thread(void *p){
 	
 			Sleep(50);
 		}
+		wait(mutex);
+		rain_randomise(&t);
+		signal(mutex);
 		//tmpdelay = rand() % t.pos * 100;
 	}
 }
