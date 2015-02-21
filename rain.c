@@ -1,12 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <windows.h>
+#include <conio.h>
+#include <signal.h>
 
 #define gotoxy(h,x,y) SetConsoleCursorPosition((h), (COORD){(x),(y)})
 #define setColor(h,c) SetConsoleTextAttribute((h), (c))
-#define wait(sem) WaitForSingleObject(sem,MAXLONG)
-#define signal(sem) ReleaseSemaphore(sem,1,NULL)
-#define create(n) CreateSemaphore(NULL,n,MAXLONG,NULL);
+#define sem_wait(sem) WaitForSingleObject(sem,MAXLONG)
+#define sem_signal(sem) ReleaseSemaphore(sem,1,NULL)
+#define sem_create(n) CreateSemaphore(NULL,n,MAXLONG,NULL);
 #define semaphore HANDLE
 
 #define RAIN_LEN 15
@@ -23,6 +25,8 @@ typedef struct _RainThread{
 
 void* rain_thread(void*);
 void rain_randomise(RainThread *rain_thread);
+void clear();
+void signal_handler(int);
 
 HANDLE handle;
 PCONSOLE_SCREEN_BUFFER_INFO pbuffer_info;
@@ -33,6 +37,8 @@ semaphore mutex;
 int main(int argc, char *argv[]){
 	COORD coord;
 	int i, height_max, width_max;
+
+    signal(SIGINT, signal_handler);
 
 	handle = GetStdHandle(STD_OUTPUT_HANDLE);
 	pbuffer_info = (PCONSOLE_SCREEN_BUFFER_INFO)malloc(sizeof(CONSOLE_SCREEN_BUFFER_INFO));
@@ -45,24 +51,18 @@ int main(int argc, char *argv[]){
 	width_max = coord.X; 
 	height_max = coord.Y;
 
-	main_sem = create(0);
-	mutex = create(1);
+	main_sem = sem_create(0);
+	mutex = sem_create(1);
 
+    clear();
 	for(i = 0; i < width_max; i++){
 		RainThread *r = (RainThread*)malloc(sizeof(RainThread));
 		r->pos = i;
 		rain_randomise(r);
-		/*
-		r->delay = rand() % (i+1) * 100;
-		r->start = rand() % HEIGHT;
-		if(r->start > HEIGHT/2) r->start = 0; 
-		r->end = rand() % HEIGHT;
-		if(r->end <= r->start) r->end = HEIGHT;
-		*/
 		CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)rain_thread, (void*)r, 0, NULL);
 	}
 
-	wait(main_sem);
+	sem_wait(main_sem);
 
 	return 0;
 }
@@ -90,7 +90,7 @@ void* rain_thread(void *p){
 		j = rand() % CE;
 		if(j < CS) j += CS;
 		for(i = t.start; i< t.end+RAIN_LEN; i++){
-			wait(mutex);
+			sem_wait(mutex);
 			if(i < t.end){
 				setColor(handle, 7);
 				gotoxy(handle, t.pos, i);
@@ -141,14 +141,30 @@ void* rain_thread(void *p){
 				printf(" ");
 			}
 
-			signal(mutex);
+			sem_signal(mutex);
 	
 			Sleep(50);
 		}
-		wait(mutex);
+		sem_wait(mutex);
 		rain_randomise(&t);
-		signal(mutex);
+		sem_signal(mutex);
 		//tmpdelay = rand() % t.pos * 100;
 	}
+}
+
+void clear(){
+    DWORD cellCount;
+    COORD coords = {0,0};
+
+    cellCount = pbuffer_info->dwSize.X * pbuffer_info->dwSize.Y;
+    FillConsoleOutputCharacterA(handle, (TCHAR)' ', cellCount, coords, NULL);
+}
+
+void signal_handler(int num){
+    sem_wait(mutex);
+    clear();
+    gotoxy(handle, 0,0);
+    setColor(handle, 7);
+    exit(num);
 }
 
