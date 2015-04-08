@@ -22,7 +22,7 @@ HANDLE hHandle;
 #elif __linux
 
 #define GOTO_XY(x,y)
-#define PRINT_GREEN(x)
+#define PRINT_GREEN(x) printf("\033[40;32mx\033[5m");
 
 #endif
 
