@@ -9,9 +9,9 @@
 
 //#define gotoxy(h,x,y) SetConsoleCursorPosition((h), (COORD){(x),(y)})
 //#define setColor(h,c) SetConsoleTextAttribute((hHandle), (c))
-#define setColor(c) SetConsoleTextAttribute((hHandle), (c))
+#define SETCOLOR(c) SetConsoleTextAttribute((hHandle), (c))
 #define GOTO_XY(x,y) SetConsoleCursorPosition((hHandle), (COORD){(x),(y)})
-#define PRINT_GREEN(x) setColor(GREEN);printf("x\n")
+#define PRINT_GREEN(x) SETCOLOR(GREEN);printf("x\n")
 #define SEM_WAIT(sem) WaitForSingleObject(sem,MAXLONG)
 #define SEM_SIGNAL(sem) ReleaseSemaphore(sem,1,NULL)
 #define SEM_CREATE(n,m) n=CreateSemaphore(NULL,m,MAXLONG,NULL)
