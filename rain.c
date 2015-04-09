@@ -1,15 +1,30 @@
 #include <stdlib.h>
 #include <stdio.h>
+
+#ifdef __WIN32
+
 #include <windows.h>
 #include <conio.h>
 #include <signal.h>
 
-#define gotoxy(h,x,y) SetConsoleCursorPosition((h), (COORD){(x),(y)})
-#define setColor(h,c) SetConsoleTextAttribute((h), (c))
+//#define gotoxy(h,x,y) SetConsoleCursorPosition((h), (COORD){(x),(y)})
+//#define setColor(h,c) SetConsoleTextAttribute((hHandle), (c))
+#define setColor(c) SetConsoleTextAttribute((hHandle), (c))
+#define GOTO_XY(x,y) SetConsoleCursorPosition((hHandle), (COORD){(x),(y)})
+#define PRINT_GREEN(x) setColor(GREEN);printf("x\n");
 #define sem_wait(sem) WaitForSingleObject(sem,MAXLONG)
 #define sem_signal(sem) ReleaseSemaphore(sem,1,NULL)
 #define sem_create(n) CreateSemaphore(NULL,n,MAXLONG,NULL);
 #define semaphore HANDLE
+
+HANDLE hHandle;
+
+#elif __linux
+
+#define GOTO_XY(x,y)
+#define PRINT_GREEN(x)
+
+#endif
 
 #define RAIN_LEN 15
 #define HEIGHT 40
@@ -92,9 +107,11 @@ void* rain_thread(void *p){
 		for(i = t.start; i< t.end+RAIN_LEN; i++){
 			sem_wait(mutex);
 			if(i < t.end){
-				setColor(handle, 7);
-				gotoxy(handle, t.pos, i);
-				printf("%c", c1);
+				//gotoxy(handle, t.pos, i);
+				//setColor(handle, 7);
+				//printf("%c", c1);
+                GOTO_XY(handle, t.pos, i);
+                PRINT_GREEN(c1);
 
 				c4 = c3; c3 = c2; c2 = c1; c1 = j;
 				j = rand() % CE;;
