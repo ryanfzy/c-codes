@@ -91,17 +91,17 @@ typedef struct _ScreenInfo{
 
 void signal_handler(int);
 
-//HANDLE hHandle;
-//PCONSOLE_SCREEN_BUFFER_INFO pbuffer_info;
-
 SEMAPHORE main_sem;
 SEMAPHORE mutex;
+
 int rain_len;
 int max_height;
 int max_width;
 
 #ifdef __unix
 
+//TODO: windows only support bright but not dim
+//  but unix support dim, can use this feature to create better effects
 void print_color(char ch, int color, bool intensity){
     if(intensity)
         printf("\033[%d;1m%c",color,ch);
@@ -117,6 +117,7 @@ void get_screen_info(ScreenInfo *psi){
 }
 
 void clear(){
+    printf("\033[0m");
     printf("\033[2J");
 }
 
@@ -130,23 +131,18 @@ void* test_thread(void *param){
 }
 
 void rain_randomise(RainThread *r){
-    /*
-	r->delay = rand() % (r->pos+1) * 100;
-	r->start = rand() % HEIGHT;
-	if(r->start > HEIGHT/2) r->start = 0; 
-	r->end = rand() % HEIGHT;
-	if(r->end <= r->start) r->end = HEIGHT;
-    */
+    //TODO: t->delay should be microsecond
 	r->delay = rand() % (r->pos+1) * 100;
 	r->start = rand() % max_height;
-	if(r->start > max_height/2) r->start = 0; 
+	if(r->start > max_height/2)
+        r->start = 0; 
 	r->end = rand() % max_height;
-	if(r->end <= r->start) r->end = max_height;
+	if(r->end <= r->start || r->end - r->start < rain_len)
+        r->end = max_height;
 
 }
 
 void* rain_thread(void *p){
-    printf("here");
 	int i,j,tmpdelay,k;
 	RainThread t;
 	int c1, c2, c3, c4;
@@ -155,44 +151,36 @@ void* rain_thread(void *p){
 	free((RainThread*)p);
 	tmpdelay = t.delay;
 
-    /*
-    printf("pos(%d)\n", t.pos);
-    printf("start(%d)\n", t.start);
-    printf("end(%d)\n", t.end);
-    printf("delay(%d)\n", t.delay);
-    return;
-    */
-
 	while(1){
 		//SLEEP(t.delay);
+        
+        //get a random char
 		j = rand() % CE;
 		if(j < CS) j += CS;
+
         c1 = j;
         for(i = t.start; i < t.end+rain_len; i++){
 			SEM_WAIT(mutex);
-            k = i - t.start;
-            //printf("here(%d)",k);
 			if(i < t.end){
+                k = i - t.start;
 
                 GOTO_XY(t.pos, i);
                 print_color(c1, WHITE, 0);
 
+                //switch the char and get a new char
 				c4 = c3; c3 = c2; c2 = c1; c1 = j;
 				j = rand() % CE;
 				if(j < CS) j += CS;
 
-				//if(i > 1){
-                if(k>0){
+                if(k > 0){
                     GOTO_XY(t.pos, i-1);
                     print_color(c2, GREEN, 1);
 				}
-				//if(i > 2){
-                if(k>1){
+                if(k > 1){
                     GOTO_XY(t.pos, i-2);
                     print_color(c3, GREEN, 1);
 				}
-				//if(i > 3){
-                if(k>2){
+                if(k > 2){
                     GOTO_XY(t.pos, i-3);
                     print_color(c4, GREEN, 0);
 				}
@@ -220,7 +208,10 @@ void* rain_thread(void *p){
 
 			SEM_SIGNAL(mutex);
 	
+            //must flush the buffer here
             fflush(stdout);
+
+            //TODO: need to change here to handle both unix and windows
 			SLEEP(40000);
 		}
 		SEM_WAIT(mutex);
@@ -231,21 +222,15 @@ void* rain_thread(void *p){
 }
 
 int main(int argc, char *argv[]){
-	//COORD coord;
     ScreenInfo screen;
 	int i;
 
     signal(SIGINT, signal_handler);
 
-	//handle = GetStdHandle(STD_OUTPUT_HANDLE);
-	//pbuffer_info = (PCONSOLE_SCREEN_BUFFER_INFO)malloc(sizeof(CONSOLE_SCREEN_BUFFER_INFO));
-	//GetConsoleScreenBufferInfo(handle, pbuffer_info);
-	//coord = pbuffer_info->dwMaximumWindowSize;
-	//printf("dwMaximumWindowSize:(%d,%d)\n", coord.X, coord.Y);
-
     get_screen_info(&screen);
 
 	srand(time(NULL));
+    //TODO: maybe we don't need max_width and max_height
 	max_width = screen.width; 
 	max_height = screen.height;
 
@@ -254,26 +239,12 @@ int main(int argc, char *argv[]){
 	SEM_CREATE(main_sem, 0);
 	SEM_CREATE(mutex, 1);
 
-    //printf("width(%d)\n", max_width);
-    //printf("height(%d)\n", max_height);
-
-    //clear();
+    clear();
 	for(i = 0; i < max_width; i++){
-        //printf("here(%d)\n", i);
-        //printf("%d\n", i);
 		RainThread *r = (RainThread*)malloc(sizeof(RainThread));
 		r->pos = i;
 	    rain_randomise(r);
-        //pthread_t thread;
         THREAD_CREATE(rain_thread, r);
-        /*
-        int *j = (int*)malloc(sizeof(int));
-        *j = i+1;
-        THREAD_CREATE(test_thread, j);
-        */
-		//CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)rain_thread, (void*)r, 0, NULL);
-        //pthread_create(&thread, NULL, (void*)rain_thread, (void*)r);
-        //printf("%d\n", i);
 	}
 
 	SEM_WAIT(main_sem);
@@ -284,11 +255,7 @@ int main(int argc, char *argv[]){
 void signal_handler(int num){
     SEM_WAIT(mutex);
     clear();
-    //gotoxy(handle, 0,0);
-    //setColor(handle, 7);
     GOTO_XY(0, 0);
-    //print_color(' ', WHITE, 0);
-    printf("\033[0m");
     exit(num);
 }
 
