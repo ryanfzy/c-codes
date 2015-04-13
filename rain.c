@@ -56,6 +56,8 @@ void clear(){
 #include <pthread.h>
 #include <unistd.h>
 
+#define TIME_FACTOR 100000
+
 #define SEMAPHORE sem_t
 #define SEM_CREATE(n,m) sem_init(&n,0,m)
 #define SEM_SIGNAL(s) sem_post(&s)
@@ -95,6 +97,7 @@ SEMAPHORE main_sem;
 SEMAPHORE mutex;
 
 int rain_len;
+ScreenInfo screen;
 int max_height;
 int max_width;
 
@@ -131,15 +134,17 @@ void* test_thread(void *param){
 }
 
 void rain_randomise(RainThread *r){
-    //TODO: t->delay should be microsecond
-	r->delay = rand() % (r->pos+1) * 100;
+    //TODO: r->delay is derived from the width, must times a time factor
+    // different os has different time factor depend on sleep function
+	r->delay = (rand() % (r->pos+1)) * TIME_FACTOR;
+    //TODO: not sure why rand()%screen.height give floating point exception
+    // but this does not
 	r->start = rand() % max_height;
 	if(r->start > max_height/2)
         r->start = 0; 
 	r->end = rand() % max_height;
-	if(r->end <= r->start || r->end - r->start < rain_len)
+	if(r->end <= r->start || (r->end - r->start) < rain_len)
         r->end = max_height;
-
 }
 
 void* rain_thread(void *p){
@@ -149,10 +154,9 @@ void* rain_thread(void *p){
 
 	t = *((RainThread*)p);
 	free((RainThread*)p);
-	tmpdelay = t.delay;
 
 	while(1){
-		//SLEEP(t.delay);
+		SLEEP(t.delay);
         
         //get a random char
 		j = rand() % CE;
@@ -211,13 +215,12 @@ void* rain_thread(void *p){
             //must flush the buffer here
             fflush(stdout);
 
-            //TODO: need to change here to handle both unix and windows
-			SLEEP(40000);
+		    //SLEEP(0.4*TIME_FACTOR);
+            SLEEP(40000);
 		}
 		SEM_WAIT(mutex);
 		rain_randomise(&t);
 		SEM_SIGNAL(mutex);
-		//tmpdelay = rand() % t.pos * 100;
 	}
 }
 
@@ -234,13 +237,13 @@ int main(int argc, char *argv[]){
 	max_width = screen.width; 
 	max_height = screen.height;
 
-    rain_len = max_height / 3;
+    rain_len = screen.height / 3;
 
 	SEM_CREATE(main_sem, 0);
 	SEM_CREATE(mutex, 1);
 
     clear();
-	for(i = 0; i < max_width; i++){
+	for(i = 0; i < screen.width; i++){
 		RainThread *r = (RainThread*)malloc(sizeof(RainThread));
 		r->pos = i;
 	    rain_randomise(r);
