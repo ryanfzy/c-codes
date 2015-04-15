@@ -79,6 +79,10 @@ void clear(){
 #define CS 33
 #define CE 127
 
+#define NORMAL 0
+#define INTENSE 1
+#define FADE 2
+
 typedef struct _RainThread{
 	int pos;
 	int start;
@@ -98,8 +102,6 @@ SEMAPHORE mutex;
 
 int rain_len;
 ScreenInfo screen;
-int max_height;
-int max_width;
 
 #ifdef __unix
 
@@ -107,9 +109,9 @@ int max_width;
 //  but unix support dim, can use this feature to create better effects
 void print_color(char ch, int color, bool intensity){
     if(intensity)
-        printf("\033[%d;1m%c",color,ch);
+        printf("\033[%d;1m%c\033[0m",color,ch);
     else
-        printf("\033[%dm%c",color,ch);
+        printf("\033[%dm%c\033[0m",color,ch);
 }
 
 void get_screen_info(ScreenInfo *psi){
@@ -134,17 +136,13 @@ void* test_thread(void *param){
 }
 
 void rain_randomise(RainThread *r){
-    //TODO: r->delay is derived from the width, must times a time factor
-    // different os has different time factor depend on sleep function
 	r->delay = (rand() % (r->pos+1)) * TIME_FACTOR;
-    //TODO: not sure why rand()%screen.height give floating point exception
-    // but this does not
-	r->start = rand() % max_height;
-	if(r->start > max_height/2)
+	r->start = rand() % screen.height;
+	if(r->start > screen.height/2)
         r->start = 0; 
-	r->end = rand() % max_height;
+	r->end = rand() % screen.height;
 	if(r->end <= r->start || (r->end - r->start) < rain_len)
-        r->end = max_height;
+        r->end = screen.height;
 }
 
 void* rain_thread(void *p){
@@ -165,11 +163,12 @@ void* rain_thread(void *p){
         c1 = j;
         for(i = t.start; i < t.end+rain_len; i++){
 			SEM_WAIT(mutex);
+            // hanlde the first 3 characters
 			if(i < t.end){
                 k = i - t.start;
 
                 GOTO_XY(t.pos, i);
-                print_color(c1, WHITE, 0);
+                print_color(c1, WHITE, NORMAL);
 
                 //switch the char and get a new char
 				c4 = c3; c3 = c2; c2 = c1; c1 = j;
@@ -178,31 +177,31 @@ void* rain_thread(void *p){
 
                 if(k > 0){
                     GOTO_XY(t.pos, i-1);
-                    print_color(c2, GREEN, 1);
+                    print_color(c2, GREEN, INTENSE);
 				}
                 if(k > 1){
                     GOTO_XY(t.pos, i-2);
-                    print_color(c3, GREEN, 1);
+                    print_color(c3, GREEN, INTENSE);
 				}
                 if(k > 2){
                     GOTO_XY(t.pos, i-3);
-                    print_color(c4, GREEN, 0);
+                    print_color(c4, GREEN, NORMAL);
 				}
 			}
 
 			if(i == t.end){
                 GOTO_XY(t.pos, i-1);
-                print_color(c1, GREEN, 1);
+                print_color(c1, GREEN, INTENSE);
                 GOTO_XY(t.pos, i-3);
-                print_color(c3, GREEN, 0);
+                print_color(c3, GREEN, NORMAL);
 			}
 			if(i == (t.end+1)){
                 GOTO_XY(t.pos, i-3);
-                print_color(c2, GREEN, 0);
+                print_color(c2, GREEN, NORMAL);
 			}
 			if(i == (t.end+2)){
                 GOTO_XY(t.pos, i-3);
-                print_color(c1, GREEN, 0);
+                print_color(c1, GREEN, NORMAL);
 			}
 	
 			if(i >= rain_len){
@@ -215,7 +214,6 @@ void* rain_thread(void *p){
             //must flush the buffer here
             fflush(stdout);
 
-		    //SLEEP(0.4*TIME_FACTOR);
             SLEEP(40000);
 		}
 		SEM_WAIT(mutex);
@@ -225,7 +223,6 @@ void* rain_thread(void *p){
 }
 
 int main(int argc, char *argv[]){
-    ScreenInfo screen;
 	int i;
 
     signal(SIGINT, signal_handler);
@@ -233,9 +230,6 @@ int main(int argc, char *argv[]){
     get_screen_info(&screen);
 
 	srand(time(NULL));
-    //TODO: maybe we don't need max_width and max_height
-	max_width = screen.width; 
-	max_height = screen.height;
 
     rain_len = screen.height / 3;
 
