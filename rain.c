@@ -8,6 +8,17 @@
 #include <windows.h>
 #include <conio.h>
 
+#elif __unix
+
+#include <semaphore.h>
+#include <sys/ioctl.h>
+#include <pthread.h>
+#include <unistd.h>
+
+#endif
+
+#ifdef __WIN32
+
 //#define gotoxy(h,x,y) SetConsoleCursorPosition((h), (COORD){(x),(y)})
 //#define setColor(h,c) SetConsoleTextAttribute((hHandle), (c))
 #define SETCOLOR(c) SetConsoleTextAttribute((hHandle), (c))
@@ -25,36 +36,7 @@
 
 #define THREAD_CREATE(f,a) CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)f,(void*)a,0,NULL);
 
-HANDLE _h;
-void get_screen_info(SCREEN_INFO *psi){
-    _h = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_SCREEN_BUFF_INFO buf;
-    GetConsoleScreenBufferInfo(_h,&buf);
-    si.width=buf.dwMaximumWindowSize.X;
-    si.height=buf.dwMaximumWindowSize.Y;
-}
-
-void print_color(char ch, int color, bool intensity){
-    if(intensity)
-        color = color + 8;
-    SetConsoleTextAttribute(hHandle, color)
-    printf("%c", ch);
-}
-
-void clear(){
-    DWORD cellCount;
-    COORD coords = {0,0};
-
-    cellCount = pbuffer_info->dwSize.X * pbuffer_info->dwSize.Y;
-    FillConsoleOutputCharacterA(handle, (TCHAR)' ', cellCount, coords, NULL);
-}
-
 #elif __unix
-
-#include <semaphore.h>
-#include <sys/ioctl.h>
-#include <pthread.h>
-#include <unistd.h>
 
 #define TIME_FACTOR 100000
 
@@ -103,7 +85,33 @@ SEMAPHORE mutex;
 int rain_len;
 ScreenInfo screen;
 
-#ifdef __unix
+#ifdef __WIN32
+
+HANDLE _h;
+void get_screen_info(SCREEN_INFO *psi){
+    _h = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFF_INFO buf;
+    GetConsoleScreenBufferInfo(_h,&buf);
+    si.width=buf.dwMaximumWindowSize.X;
+    si.height=buf.dwMaximumWindowSize.Y;
+}
+
+void print_color(char ch, int color, bool intensity){
+    if(intensity)
+        color = color + 8;
+    SetConsoleTextAttribute(hHandle, color)
+    printf("%c", ch);
+}
+
+void clear(){
+    DWORD cellCount;
+    COORD coords = {0,0};
+
+    cellCount = pbuffer_info->dwSize.X * pbuffer_info->dwSize.Y;
+    FillConsoleOutputCharacterA(handle, (TCHAR)' ', cellCount, coords, NULL);
+}
+
+#elif __unix
 
 //TODO: windows only support bright but not dim
 //  but unix support dim, can use this feature to create better effects
@@ -214,7 +222,7 @@ void* rain_thread(void *p){
             //must flush the buffer here
             fflush(stdout);
 
-            SLEEP(40000);
+            SLEEP(0.4*TIME_FACTOR);
 		}
 		SEM_WAIT(mutex);
 		rain_randomise(&t);
