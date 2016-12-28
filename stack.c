@@ -29,19 +29,19 @@ static void StackNode_delete(StackNode *pNode)
 Stack* Stack_new(){
 	Stack *pStack = malloc(sizeof(Stack));
     Stack_init(pStack);
-	//pStack->top = NULL;
-	//pStack->size = 0;
 	return pStack;
 }
 
 void Stack_init(Stack *pStack)
 {
     pStack->pTop = NULL;
-    pStack->iSize = 0;
+    pStack->iCount = 0;
 }
 
 void Stack_delete(Stack *pStack)
 {
+    Stack_destroy(pStack);
+    /*
     StackNode *pTopNode = pStack->pTop;
     for (int i = 0; i < pStack->iSize && pTopNode != NULL; i++)
     {
@@ -49,8 +49,23 @@ void Stack_delete(Stack *pStack)
         StackNode_delete(pTopNode);
         pTopNode = pNextNode;
     }
+    */
     free(pStack);
     pStack = NULL;
+}
+
+void Stack_destroy(Stack *pStack)
+{
+    StackNode *pTopNode = pStack->pTop;
+    for (int i = 0; i < pStack->iCount && pTopNode != NULL; i++)
+    {
+        StackNode *pNextNode = pTopNode->pNext;
+        StackNode_delete(pTopNode);
+        pTopNode = pNextNode;
+    }
+
+    pStack->pTop = NULL;
+    pStack->iCount = 0;
 }
 
 int Stack_push(Stack* pStack, char *pData, size_t iSize){
@@ -59,38 +74,35 @@ int Stack_push(Stack* pStack, char *pData, size_t iSize){
     pNewNode->iSize = iSize;
 	pNewNode->pCargo = malloc(pNewNode->iSize);
     memcpy(pNewNode->pCargo, pData, pNewNode->iSize);
-    //pNewNode->cargo[pNewNode->iSize] = '\0';
 
-	if(pStack->iSize == 0)
+	if(pStack->iCount == 0)
         pNewNode->pNext = NULL;
 	else
 		pNewNode->pNext = pStack->pTop;
 
     pStack->pTop = pNewNode;
-	pStack->iSize++;
+	pStack->iCount++;
 
-	return pStack->iSize;
+	return pStack->iCount;
 }
 
 bool Stack_pop(Stack *pStack, char *pData, size_t iSize){
-	if(pStack->iSize == 0)
+	if(pStack->iCount == 0)
 		return false; 
 
 	StackNode *pNode = pStack->pTop;
     int iMinSize = iSize > pNode->iSize ? pNode->iSize : iSize;
-    //memcpy(szStr, pNode->cargo, iMinSize - 1);
     memcpy(pData, pNode->pCargo, iMinSize);
-    //szStr[iMinSize] = '\0';
 
 	pStack->pTop = pNode->pNext;
-	pStack->iSize--;
+	pStack->iCount--;
 
     StackNode_delete(pNode); 
     return true;
 }
 
 bool Stack_isEmpty(Stack *pStack){
-	return pStack->iSize == 0;
+	return pStack->iCount == 0;
 }
 
 /*

@@ -13,15 +13,19 @@ typedef struct _stackNode
 typedef struct _stack
 {
 	StackNode *pTop;
-	int iSize;
+	int iCount;
 } Stack;
 
 Stack* Stack_new();
 void Stack_init(Stack *pStack);
+
 int Stack_push(Stack* pStack, char *pData, size_t iSize);
 bool Stack_pop(Stack* pStack, char *pData, size_t iSize);
+
 bool Stack_isEmpty(Stack *pStack);
+
 void Stack_delete(Stack *pStack);
+void Stack_destroy(Stack *pStack);
 
 //void StrStack_print(StrStack *pStack);
 #endif
