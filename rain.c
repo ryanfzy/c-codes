@@ -22,7 +22,7 @@
 //#define gotoxy(h,x,y) SetConsoleCursorPosition((h), (COORD){(x),(y)})
 //#define setColor(h,c) SetConsoleTextAttribute((hHandle), (c))
 #define SETCOLOR(c) SetConsoleTextAttribute((hHandle), (c))
-#define GOTO_XY(x,y) SetConsoleCursorPosition((hHandle), (COORD){(x),(y)})
+#define GOTO_XY(x,y) SetConsoleCursorPosition((_h), (COORD){(x),(y)})
 
 #define WHITE 7
 #define GREEN 2
@@ -32,19 +32,19 @@
 #define SEM_CREATE(n,m) n=CreateSemaphore(NULL,m,MAXLONG,NULL)
 #define SEMAPHORE HANDLE
 
+#define TIME_FACTOR 100
 #define SLEEP(n) Sleep(n)
 
 #define THREAD_CREATE(f,a) CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)f,(void*)a,0,NULL);
 
 #elif __unix
 
-#define TIME_FACTOR 100000
-
 #define SEMAPHORE sem_t
 #define SEM_CREATE(n,m) sem_init(&n,0,m)
 #define SEM_SIGNAL(s) sem_post(&s)
 #define SEM_WAIT(s) sem_wait(&s)
 
+#define TIME_FACTOR 100000
 #define SLEEP(n) usleep(n)
 
 #define THREAD_CREATE(fun,arg) pthread_t _t;pthread_create(&_t,NULL,(void*)fun,(void*)arg);
@@ -88,27 +88,33 @@ ScreenInfo screen;
 #ifdef __WIN32
 
 HANDLE _h;
-void get_screen_info(SCREEN_INFO *psi){
+//CONSOLE_SCREEN_BUFFER_INFO _buf;
+void get_screen_info(ScreenInfo *psi){
     _h = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_SCREEN_BUFF_INFO buf;
+    CONSOLE_SCREEN_BUFFER_INFO buf;
     GetConsoleScreenBufferInfo(_h,&buf);
-    si.width=buf.dwMaximumWindowSize.X;
-    si.height=buf.dwMaximumWindowSize.Y;
+    psi->width=buf.dwMaximumWindowSize.X;
+    // we divide the height by 2 to make it run smoothly
+    psi->height=buf.dwMaximumWindowSize.Y/2;
 }
 
 void print_color(char ch, int color, bool intensity){
     if(intensity)
         color = color + 8;
-    SetConsoleTextAttribute(hHandle, color)
+    SetConsoleTextAttribute(_h, color);
     printf("%c", ch);
+    SetConsoleTextAttribute(_h, WHITE);
 }
 
 void clear(){
     DWORD cellCount;
     COORD coords = {0,0};
 
-    cellCount = pbuffer_info->dwSize.X * pbuffer_info->dwSize.Y;
-    FillConsoleOutputCharacterA(handle, (TCHAR)' ', cellCount, coords, NULL);
+    CONSOLE_SCREEN_BUFFER_INFO buf;
+    GetConsoleScreenBufferInfo(_h,&buf);
+    //cellCount = pbuffer_info->dwSize.X * pbuffer_info->dwSize.Y;
+    cellCount = buf.dwSize.X * buf.dwSize.Y;
+    FillConsoleOutputCharacterA(_h, (TCHAR)' ', cellCount, coords, NULL);
 }
 
 #elif __unix
