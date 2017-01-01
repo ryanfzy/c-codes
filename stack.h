@@ -3,29 +3,29 @@
 
 #include <stdbool.h>
 
-typedef struct _stackNode
+typedef struct _StackNode
 {
-	char *pCargo;
-    size_t iSize;
-	struct _stackNode *pNext;
+	char *pdata;
+    size_t isize;
+	struct _StackNode *pnext;
 } StackNode;
 
 typedef struct _stack
 {
-	StackNode *pTop;
-	int iCount;
+	StackNode *ptop;
+	int icount;
 } Stack;
 
-Stack* Stack_new();
-void Stack_init(Stack *pStack);
+Stack* stack_create();
+void stack_init(Stack *pstack);
 
-int Stack_push(Stack* pStack, char *pData, size_t iSize);
-bool Stack_pop(Stack* pStack, char *pData, size_t iSize);
+int stack_push(Stack* pstack, char *pdata, size_t isize);
+bool stack_pop(Stack* pstack, char *pdata, size_t isize);
 
-bool Stack_isEmpty(Stack *pStack);
+bool stack_isempty(Stack *pstack);
 
-void Stack_delete(Stack *pStack);
-void Stack_destroy(Stack *pStack);
+void stack_free(Stack *pstack);
+void stack_destroy(Stack *pstack);
 
 //void StrStack_print(StrStack *pStack);
 #endif

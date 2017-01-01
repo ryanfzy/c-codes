@@ -6,103 +6,94 @@
 ////////////////////////////////////////////////////
 // stack node operations
 ////////////////////////////////////////////////////
-static StackNode* StackNode_new()
+static StackNode* stacknode_create()
 {
-    StackNode *pNode = malloc(sizeof(StackNode));
-    pNode->pCargo = NULL;
-    pNode->pNext = NULL;
-    pNode->iSize = 0;
-    return pNode;
+    StackNode *pnode = malloc(sizeof(StackNode));
+    pnode->pdata = NULL;
+    pnode->pnext = NULL;
+    pnode->isize = 0;
+    return pnode;
 }
 
-static void StackNode_delete(StackNode *pNode)
+static void stacknode_free(StackNode *pnode)
 {
-    free(pNode->pCargo);
+    free(pnode->pdata);
     //free(pNode->pNext);  // don't free pNext
-    free(pNode);
+    free(pnode);
 }
 
 ////////////////////////////////////////////////////
 // stack operations
 ////////////////////////////////////////////////////
 
-Stack* Stack_new(){
-	Stack *pStack = malloc(sizeof(Stack));
-    Stack_init(pStack);
-	return pStack;
+Stack* stack_create(){
+	Stack *pstack = malloc(sizeof(Stack));
+    stack_init(pstack);
+	return pstack;
 }
 
-void Stack_init(Stack *pStack)
+void stack_init(Stack *pstack)
 {
-    pStack->pTop = NULL;
-    pStack->iCount = 0;
+    pstack->ptop = NULL;
+    pstack->icount = 0;
 }
 
-void Stack_delete(Stack *pStack)
+void stack_free(Stack *pstack)
 {
-    Stack_destroy(pStack);
-    /*
-    StackNode *pTopNode = pStack->pTop;
-    for (int i = 0; i < pStack->iSize && pTopNode != NULL; i++)
+    stack_destroy(pstack);
+    free(pstack);
+    pstack = NULL;
+}
+
+void stack_destroy(Stack *pstack)
+{
+    StackNode *ptop = pstack->ptop;
+    for (int i = 0; i < pstack->icount && ptop != NULL; i++)
     {
-        StackNode *pNextNode = pTopNode->pNext;
-        StackNode_delete(pTopNode);
-        pTopNode = pNextNode;
-    }
-    */
-    free(pStack);
-    pStack = NULL;
-}
-
-void Stack_destroy(Stack *pStack)
-{
-    StackNode *pTopNode = pStack->pTop;
-    for (int i = 0; i < pStack->iCount && pTopNode != NULL; i++)
-    {
-        StackNode *pNextNode = pTopNode->pNext;
-        StackNode_delete(pTopNode);
-        pTopNode = pNextNode;
+        StackNode *pnext = ptop->pnext;
+        stacknode_free(ptop);
+        ptop = pnext;
     }
 
-    pStack->pTop = NULL;
-    pStack->iCount = 0;
+    pstack->ptop = NULL;
+    pstack->icount = 0;
 }
 
-int Stack_push(Stack* pStack, char *pData, size_t iSize){
-	StackNode *pNewNode = StackNode_new();
+int stack_push(Stack* pstack, char *pdata, size_t isize){
+	StackNode *pnew = stacknode_create();
 
-    pNewNode->iSize = iSize;
-	pNewNode->pCargo = malloc(pNewNode->iSize);
-    memcpy(pNewNode->pCargo, pData, pNewNode->iSize);
+    pnew->isize = isize;
+	pnew->pdata = malloc(pnew->isize);
+    memcpy(pnew->pdata, pdata, pnew->isize);
 
-	if(pStack->iCount == 0)
-        pNewNode->pNext = NULL;
+	if(pstack->icount == 0)
+        pnew->pnext = NULL;
 	else
-		pNewNode->pNext = pStack->pTop;
+		pnew->pnext = pstack->ptop;
 
-    pStack->pTop = pNewNode;
-	pStack->iCount++;
+    pstack->ptop = pnew;
+	pstack->icount++;
 
-	return pStack->iCount;
+	return pstack->icount;
 }
 
-bool Stack_pop(Stack *pStack, char *pData, size_t iSize){
-	if(pStack->iCount == 0)
+bool stack_pop(Stack *pstack, char *pdata, size_t isize){
+	if(pstack->icount == 0)
 		return false; 
 
-	StackNode *pNode = pStack->pTop;
-    int iMinSize = iSize > pNode->iSize ? pNode->iSize : iSize;
-    memcpy(pData, pNode->pCargo, iMinSize);
+	StackNode *pnode = pstack->ptop;
+    int iminsize = isize > pnode->isize ? pnode->isize : isize;
+    memcpy(pdata, pnode->pdata, iminsize);
 
-	pStack->pTop = pNode->pNext;
-	pStack->iCount--;
+	pstack->ptop = pnode->pnext;
+	pstack->icount--;
 
-    StackNode_delete(pNode); 
+    stacknode_free(pnode); 
     return true;
 }
 
-bool Stack_isEmpty(Stack *pStack){
-	return pStack->iCount == 0;
+bool stack_isempty(Stack *pstack){
+	return pstack->icount == 0;
 }
 
 /*
