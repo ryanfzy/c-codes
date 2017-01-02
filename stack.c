@@ -42,7 +42,7 @@ void stack_free(Stack *pstack)
 {
     stack_destroy(pstack);
     free(pstack);
-    pstack = NULL;
+    //pstack = NULL;
 }
 
 void stack_destroy(Stack *pstack)
