@@ -92,6 +92,17 @@ bool stack_pop(Stack *pstack, char *pdata, size_t isize){
     return true;
 }
 
+void stack_pop2(Stack *pstack)
+{
+    if (pstack->ptop != NULL)
+    {
+        StackNode *pnode = pstack->ptop;
+        pstack->ptop = pnode->pnext;
+        pstack->icount--;
+        stacknode_free(pnode);
+    }
+}
+
 bool stack_isempty(Stack *pstack){
 	return pstack->icount == 0;
 }

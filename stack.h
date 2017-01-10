@@ -19,8 +19,9 @@ typedef struct _stack
 Stack* stack_create();
 void stack_init(Stack *pstack);
 
-int stack_push(Stack* pstack, char *pdata, size_t isize);
-bool stack_pop(Stack* pstack, char *pdata, size_t isize);
+int stack_push(Stack *pstack, char *pdata, size_t isize);
+bool stack_pop(Stack *pstack, char *pdata, size_t isize);
+void stack_pop2(Stack *pstack);
 
 bool stack_isempty(Stack *pstack);
 
