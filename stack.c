@@ -103,6 +103,11 @@ void stack_pop2(Stack *pstack)
     }
 }
 
+char* stack_top(Stack *pstack)
+{
+    return pstack->ptop != NULL ? pstack->ptop->pdata : NULL;
+}
+
 bool stack_isempty(Stack *pstack){
 	return pstack->icount == 0;
 }
