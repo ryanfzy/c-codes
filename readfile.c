@@ -1,11 +1,9 @@
-#include <stdio.h>
-#include <wchar.h>
-#include <stdbool.h>
+#include "readfile.h"
 
 bool fgetuc(FILE *fp, wchar_t *pwch)
 {
     wchar_t wch;
-    char ch, mask, mask2, chars[3];
+    char ch, mask, mask2;
     int iBytes;
 
     ch = fgetc(fp);
@@ -32,15 +30,4 @@ bool fgetuc(FILE *fp, wchar_t *pwch)
     if (pwch != NULL)
         *pwch = wch;
     return true;
-}
-
-int main(void)
-{
-    FILE *fp = fopen("test2.txt", "rb");
-    wchar_t wch;
-    while (fgetuc(fp, &wch))
-    {
-        printf("%x\n", wch);
-    }
-    fclose(fp);
 }
