@@ -2,13 +2,10 @@
 #define STACK_H
 
 #include <stdbool.h>
+#include "structs.h"
 
-typedef struct _StackNode
-{
-	char *pdata;
-    size_t isize;
-	struct _StackNode *pnext;
-} StackNode;
+// a stack node is a unidirected node
+#define StackNode UnidNode
 
 typedef struct _stack
 {

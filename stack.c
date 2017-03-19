@@ -3,24 +3,8 @@
 #include <string.h>
 #include "stack.h"
 
-////////////////////////////////////////////////////
-// stack node operations
-////////////////////////////////////////////////////
-static StackNode* stacknode_create()
-{
-    StackNode *pnode = malloc(sizeof(StackNode));
-    pnode->pdata = NULL;
-    pnode->pnext = NULL;
-    pnode->isize = 0;
-    return pnode;
-}
-
-static void stacknode_free(StackNode *pnode)
-{
-    free(pnode->pdata);
-    //free(pNode->pNext);  // don't free pNext
-    free(pnode);
-}
+#define stacknode_create unidnode_create
+#define stacknode_free unidnode_free
 
 ////////////////////////////////////////////////////
 // stack operations
@@ -60,11 +44,7 @@ void stack_destroy(Stack *pstack)
 }
 
 int stack_push(Stack* pstack, char *pdata, size_t isize){
-	StackNode *pnew = stacknode_create();
-
-    pnew->isize = isize;
-	pnew->pdata = malloc(pnew->isize);
-    memcpy(pnew->pdata, pdata, pnew->isize);
+	StackNode *pnew = stacknode_create(pdata, isize);
 
 	if(pstack->icount == 0)
         pnew->pnext = NULL;
