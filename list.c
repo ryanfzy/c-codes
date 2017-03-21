@@ -2,43 +2,43 @@
 #include <string.h>
 #include "list.h"
 
-#define listnode_create unidnode_create
-#define listnode_free unidnode_free
+#define slistnode_create unidnode_create
+#define slistnode_free unidnode_free
 
-List* list_create()
+SList* slist_create()
 {
-    List *plist = malloc(sizeof(List));
-    list_init(plist);
+    SList *plist = malloc(sizeof(SList));
+    slist_init(plist);
     return plist;
 }
 
-void list_init(List *plist)
+void slist_init(SList *plist)
 {
     plist->pfirst = NULL;
     plist->plast = NULL;
     plist->icount = 0;
 }
 
-void list_free(List *plist)
+void slist_free(SList *plist)
 {
-    list_destroy(plist);
+    slist_destroy(plist);
     free(plist);
 }
 
-void list_destroy(List *plist)
+void slist_destroy(SList *plist)
 {
     ListNode *pcur = plist->pfirst;
     while (pcur != NULL)
     {
         ListNode *pnext = pcur->pnext;
-        listnode_free(pcur);
+        slistnode_free(pcur);
         pcur = pnext;
     }
 }
 
-void list_push(List *plist, char *pdata, size_t isize)
+void slist_push(SList *plist, char *pdata, size_t isize)
 {
-    ListNode *pnew = listnode_create(pdata, isize);
+    ListNode *pnew = slistnode_create(pdata, isize);
     if (plist->pfirst == NULL)
     {
         plist->pfirst = pnew;
@@ -52,14 +52,14 @@ void list_push(List *plist, char *pdata, size_t isize)
     plist->icount++;
 }
 
-void list_insert(List *plist, unsigned int ipos, char *pdata, size_t isize)
+void slist_insert(SList *plist, unsigned int ipos, char *pdata, size_t isize)
 {
     ipos = ipos > plist->icount ? plist->icount : ipos;
     if (ipos == plist->icount)
-        list_push(plist, pdata, isize);
+        slist_push(plist, pdata, isize);
     else
     {
-        ListNode *pnew = listnode_create(pdata, isize);
+        ListNode *pnew = slistnode_create(pdata, isize);
         ListNode *pbefore = plist->pfirst;
         for (int i = 0; i < ipos-1; i++)
             pbefore = pbefore->pnext;
@@ -70,7 +70,7 @@ void list_insert(List *plist, unsigned int ipos, char *pdata, size_t isize)
     }
 }
 
-bool list_remove(List *plist, unsigned int ipos, char *pdata, size_t isize)
+bool slist_remove(SList *plist, unsigned int ipos, char *pdata, size_t isize)
 {
     if (ipos >= plist->icount)
         return false;
@@ -86,14 +86,14 @@ bool list_remove(List *plist, unsigned int ipos, char *pdata, size_t isize)
             int iminsize = isize > pcur->isize ? pcur->isize : isize;
             memcpy(pdata, pcur->pdata, iminsize);
         }
-        listnode_free(pcur);
+        slistnode_free(pcur);
         pbefore->pnext = pafter;
         plist->icount--;
     }
     return true;
 }
 
-void list_remove2(List *plist, unsigned int ipos)
+void slist_remove2(SList *plist, unsigned int ipos)
 {
-    list_remove(plist, ipos, NULL, 0);
+    slist_remove(plist, ipos, NULL, 0);
 }
