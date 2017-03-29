@@ -144,6 +144,19 @@ bool slist_remove(SList *plist, unsigned int ipos, char *pdata, size_t isize)
     return true;
 }
 
+char* slist_get(SList *plist, unsigned int ipos)
+{
+    if (ipos >= plist->icount)
+        return NULL;
+    else
+    {
+        ListNode *pnode = plist->pfirst;
+        for (int i = 1; i <= ipos; i++)
+            pnode = pnode->pnext;
+        return pnode->pdata;
+    }
+}
+
 /*
 void slist_remove2(SList *plist, unsigned int ipos)
 {

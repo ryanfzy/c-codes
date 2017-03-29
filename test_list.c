@@ -219,6 +219,23 @@ START_TEST(test_list_remove4)
 }
 END_TEST
 
+START_TEST(test_list_get)
+{
+    TestData t1, *t2, *t3;
+    t1.ivalue = 1;
+    SList *plist = slist_create();
+    slist_push(plist, (char*)&t1, sizeof(TestData));
+    t2 = (TestData*)slist_get(plist, 0);
+    ck_assert_int_eq(t2->ivalue, 1);
+    t1.ivalue = 2;
+    slist_push(plist, (char*)&t1, sizeof(TestData));
+    t2 = (TestData*)slist_get(plist, 1);
+    ck_assert_int_eq(t2->ivalue, 2);
+    t3 = (TestData*)slist_get(plist, 1);
+    ck_assert_msg(t3 == t2, "not returning the same object");
+}
+END_TEST
+
 Suite* make_add_suit(void)
 {
     Suite *s = suite_create("list");
@@ -232,6 +249,7 @@ Suite* make_add_suit(void)
     tcase_add_test(tc_list, test_list_remove2);
     tcase_add_test(tc_list, test_list_remove3);
     tcase_add_test(tc_list, test_list_remove4);
+    tcase_add_test(tc_list, test_list_get);
     suite_add_tcase(s, tc_list);
     return s;
 }
