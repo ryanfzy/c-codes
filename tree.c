@@ -28,11 +28,18 @@ void tree_destroy(Tree *ptree)
     {
         int ichildren = tree_children_count(ptree);
         for (int i = 0; i < ichildren; i++)
+            // don't use free, slist_free will free the tree node
             tree_destroy(tree_get_child(ptree, i));
         slist_free(ptree->pchildren);
+        ptree->pchildren = NULL;
     }
     node_free(ptree->pnode);
-    free(ptree);
+    ptree->pnode = NULL;
+}
+
+bool tree_has_children(Tree *ptree)
+{
+    return tree_children_count(ptree) > 0;
 }
 
 int tree_children_count(Tree *ptree)
@@ -53,11 +60,13 @@ Tree* tree_get_child(Tree *ptree, unsigned int ichild)
 
 Tree* tree_add_child(Tree *ptree, char *pdata, size_t isize)
 {
-    Tree *pchild = tree_create(pdata, isize);
+    Tree child;
+    tree_init(&child, pdata, isize);
+    child.parent = ptree;
     if (ptree->pchildren == NULL)
         ptree->pchildren = slist_create();
-    slist_push(ptree->pchildren, (char*)pchild, sizeof(Tree));
-    return pchild;
+    slist_push(ptree->pchildren, (char*)&child, sizeof(Tree));
+    return tree_get_child(ptree, ptree->pchildren->icount - 1);
 }
 
 char* tree_get_data(Tree *ptree)
@@ -66,4 +75,25 @@ char* tree_get_data(Tree *ptree)
         return NULL;
     else
         return ptree->pnode->pdata;
+}
+
+void tree_remove_child(Tree *parent, Tree *pchild)
+{
+    if (parent != NULL && pchild != NULL)
+    {
+        if (tree_has_children(parent))
+        {
+            for (int = 0; i < tree_children_count(parent); i++)
+            {
+                if (tree_get_child(parent, i) == pchild)
+                {
+                    tree_destroy(pchild);
+                    SList_remove(parent->pchildren, i);
+                    return;
+                }
+                else if (tree_has_children(tree_get_child(parent, i)))
+                    tree_remove_child(tree_get_child(parent, i), pchild);
+            }
+        }
+    }
 }

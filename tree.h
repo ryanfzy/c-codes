@@ -25,5 +25,6 @@ bool tree_has_children(Tree *ptree);
 int tree_children_count(Tree *ptree);
 Tree* tree_get_child(Tree *ptree, unsigned int ichild);
 char* tree_get_data(Tree *ptree);
+void tree_remove_child(Tree *parent, Tree *pchild);
 
 #endif
