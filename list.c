@@ -157,6 +157,13 @@ char* slist_get(SList *plist, unsigned int ipos)
     }
 }
 
+size_t slist_get_count(SList *plist)
+{
+    if (plist != NULL)
+        return plist->icount;
+    return 0;
+}
+
 /*
 void slist_remove2(SList *plist, unsigned int ipos)
 {
