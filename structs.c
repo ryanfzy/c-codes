@@ -2,6 +2,9 @@
 #include <string.h>
 #include "structs.h"
 
+////////////////////////////////////////////////////
+// simple node operations
+////////////////////////////////////////////////////
 Node* node_create(char *pdata, size_t isize)
 {
     Node *pnode = malloc(sizeof(Node));
@@ -48,4 +51,28 @@ void unidnode_free(UnidNode *pnode)
     free(pnode->pdata);
     //free(pNode->pNext);  // don't free pNext
     free(pnode);
+}
+
+////////////////////////////////////////////////////
+// named node operations
+////////////////////////////////////////////////////
+NamedNode* namedNode_create(char *szName, char *pData, size_t iSize)
+{
+    NamedNode *pNode = malloc(sizeof(NamedNode));
+    namedNode_init(pNode, szName, pData, iSize);
+    return pNode;
+}
+
+void namedNode_init(NamedNode *pNode, char *szName, char *pData, size_t iSize)
+{
+    pNode->szName = szName;
+    pNode->pData = malloc(sizeof(iSize));
+    pNode->iSize = iSize;
+    memcpy(pNode->pData, pData, pNode->iSize);
+}
+
+void namedNode_free(NamedNode *pNode)
+{
+    free(pNode->pData);
+    free(pNode);
 }
