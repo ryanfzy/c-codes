@@ -32,6 +32,7 @@ void unidnode_free(UnidNode *pnode);
 
 NamedNode* namedNode_create(char *szName, char *pData, size_t iSize);
 void namedNode_init(NamedNode *pNode, char *szName, char *pData, size_t iSize);
-void namednode_free(NamedNode *pnode);
+void namedNode_free(NamedNode *pnode);
+void namedNode_destroy(NamedNode *pnode);
 
 #endif

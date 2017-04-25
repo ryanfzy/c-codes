@@ -73,6 +73,12 @@ void namedNode_init(NamedNode *pNode, char *szName, char *pData, size_t iSize)
 
 void namedNode_free(NamedNode *pNode)
 {
-    free(pNode->pData);
+    namedNode_destroy(pNode);
     free(pNode);
+}
+
+void namedNode_destroy(NamedNode *pNode)
+{
+    free(pNode->pData);
+    pNode->iSize = 0;
 }
