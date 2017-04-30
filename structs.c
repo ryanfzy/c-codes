@@ -8,13 +8,17 @@
 Node* node_create(char *pdata, size_t isize)
 {
     Node *pnode = malloc(sizeof(Node));
-    pnode->pdata = NULL;
-    pnode->isize = 0;
-    if (isize > 0)
+    if (pnode != NULL)
     {
-        pnode->isize = isize;
-        pnode->pdata = malloc(pnode->isize);
-        memcpy(pnode->pdata, pdata, pnode->isize);
+        pnode->pdata = NULL;
+        pnode->isize = 0;
+        if (isize > 0)
+        {
+            pnode->isize = isize;
+            pnode->pdata = malloc(pnode->isize);
+            if (pnode->pdata != NULL)
+                memcpy(pnode->pdata, pdata, pnode->isize);
+        }
     }
     return pnode;
 }
@@ -31,18 +35,19 @@ void node_free(Node *pnode)
 UnidNode* unidnode_create(char *pdata, size_t isize)
 {
     UnidNode *pnode = malloc(sizeof(UnidNode));
-    if (isize > 0)
-    {
-        pnode->isize = isize;
-        pnode->pdata = malloc(pnode->isize);
-        memcpy(pnode->pdata, pdata, pnode->isize);
-    }
-    else
+    if (pnode != NULL)
     {
         pnode->pdata = NULL;
         pnode->isize = 0;
+        pnode->pnext = NULL;
+        if (isize > 0)
+        {
+            pnode->isize = isize;
+            pnode->pdata = malloc(pnode->isize);
+            if (pnode->pdata != NULL)
+                memcpy(pnode->pdata, pdata, pnode->isize);
+        }
     }
-    pnode->pnext = NULL;
     return pnode;
 }
 
@@ -59,16 +64,18 @@ void unidnode_free(UnidNode *pnode)
 NamedNode* namedNode_create(char *szName, char *pData, size_t iSize)
 {
     NamedNode *pNode = malloc(sizeof(NamedNode));
-    namedNode_init(pNode, szName, pData, iSize);
+    if (pNode != NULL)
+        namedNode_init(pNode, szName, pData, iSize);
     return pNode;
 }
 
 void namedNode_init(NamedNode *pNode, char *szName, char *pData, size_t iSize)
 {
     pNode->szName = szName;
-    pNode->pData = malloc(sizeof(iSize));
     pNode->iSize = iSize;
-    memcpy(pNode->pData, pData, pNode->iSize);
+    pNode->pData = malloc(pNode->iSize);
+    if (pNode->pData != NULL)
+        memcpy(pNode->pData, pData, pNode->iSize);
 }
 
 void namedNode_free(NamedNode *pNode)
