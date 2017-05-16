@@ -59,33 +59,50 @@ void unidnode_free(UnidNode *pnode)
 }
 
 ////////////////////////////////////////////////////
-// named node operations
+// keyed node operations
 ////////////////////////////////////////////////////
-NamedNode* namedNode_create(char *szName, char *pData, size_t iSize)
+KeyedNode* keyedNode_create(char *pKey, size_t iKeySize, char *pData, size_t iDataSize)
 {
-    NamedNode *pNode = malloc(sizeof(NamedNode));
+    if (pKey != NULL && iKeySize > 0 && pData != NULL && iDataSize > 0)
+    {
+        KeyedNode *pNode = malloc(sizeof(KeyedNode));
+        keyedNode_init(pNode, pKey, iKeySize, pData, iDataSize);
+        return pNode;
+    }
+    return NULL;
+}
+
+void keyedNode_init(KeyedNode *pNode, char *pKey, size_t iKeySize, char *pData, size_t iDataSize)
+{
+    if (pNode != NULL && pKey != NULL && iKeySize > 0 && pData != NULL && iDataSize > 0)
+    {
+        pNode->iKeySize = iKeySize;
+        pNode->pKey = malloc(pNode->iKeySize);
+        memcpy(pNode->pKey, pKey, pNode->iKeySize);
+
+        pNode->iDataSize = iDataSize;
+        pNode->pData = malloc(pNode->iDataSize);
+        memcpy(pNode->pData, pData, pNode->iDataSize);
+    }
+}
+
+void keyedNode_free(KeyedNode *pNode)
+{
     if (pNode != NULL)
-        namedNode_init(pNode, szName, pData, iSize);
-    return pNode;
+    {
+        keyedNode_destroy(pNode);
+        free(pNode);
+    }
 }
 
-void namedNode_init(NamedNode *pNode, char *szName, char *pData, size_t iSize)
+void keyedNode_destroy(KeyedNode *pNode)
 {
-    pNode->szName = szName;
-    pNode->iSize = iSize;
-    pNode->pData = malloc(pNode->iSize);
-    if (pNode->pData != NULL)
-        memcpy(pNode->pData, pData, pNode->iSize);
-}
+    if (pNode != NULL && pNode->pKey != NULL && pNode->pData != NULL)
+    {
+        free(pNode->pKey);
+        pNode->iKeySize = 0;
 
-void namedNode_free(NamedNode *pNode)
-{
-    namedNode_destroy(pNode);
-    free(pNode);
-}
-
-void namedNode_destroy(NamedNode *pNode)
-{
-    free(pNode->pData);
-    pNode->iSize = 0;
+        free(pNode->pData);
+        pNode->iDataSize = 0;
+    }
 }

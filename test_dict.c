@@ -2,6 +2,8 @@
 #include <check.h>
 #include "dict.h"
 
+#define SIZEOF(str) (str), strlen((str))
+
 typedef struct _TestData
 {
     int ivalue;
@@ -32,16 +34,16 @@ START_TEST(test_dict_add1)
     TestData t;
     t.ivalue = 1;
     Dict *pdict = dict_create();
-    dict_add(pdict, "key1", (char*)&t, sizeof(TestData));
+    dict_add(pdict, SIZEOF("key1"), (char*)&t, sizeof(TestData));
 
     ck_assert_int_eq(dict_get_count(pdict), 1);
 
-    TestData *t1 = (TestData*)dict_get(pdict, "key1");
+    TestData *t1 = (TestData*)dict_get(pdict, SIZEOF("key1"));
     ck_assert_msg(t1 != &t, "dict did not make a copy of input data");
     ck_assert_int_eq(t1->ivalue, 1);
 
-    dict_add(pdict, "key2", (char*)&t, sizeof(TestData));
-    TestData *t2 = (TestData*)dict_get(pdict, "key2");
+    dict_add(pdict, SIZEOF("key2"), (char*)&t, sizeof(TestData));
+    TestData *t2 = (TestData*)dict_get(pdict, SIZEOF("key2"));
     ck_assert_msg(t1 != t2, "cannot add the same data with two different keys");
 
     dict_free(pdict);
@@ -55,13 +57,13 @@ START_TEST(test_dict_add2)
     t2.ivalue = 2;
     Dict dict;
     dict_init(&dict);
-    dict_add(&dict, "key1", (char*)&t1, sizeof(TestData));
-    dict_add(&dict, "key2", (char*)&t2, sizeof(TestData));
+    dict_add(&dict, SIZEOF("key1"), (char*)&t1, sizeof(TestData));
+    dict_add(&dict, SIZEOF("key2"), (char*)&t2, sizeof(TestData));
 
     ck_assert_int_eq(dict_get_count(&dict), 2);
-    pt1 = (TestData*)dict_get(&dict, "key1");
+    pt1 = (TestData*)dict_get(&dict, SIZEOF("key1"));
     ck_assert_int_eq(pt1->ivalue, 1);
-    pt2 = (TestData*)dict_get(&dict, "key2");
+    pt2 = (TestData*)dict_get(&dict, SIZEOF("key2"));
     ck_assert_int_eq(pt2->ivalue, 2);
 
     dict_destroy(&dict);
@@ -74,14 +76,14 @@ START_TEST(test_dict_add3)
     TestData t, *pt;
     t.ivalue = 1;
     Dict *pdict = dict_create();
-    dict_add(pdict, "key1", (char*)&t, sizeof(TestData));
+    dict_add(pdict, SIZEOF("key1"), (char*)&t, sizeof(TestData));
 
-    pt = (TestData*)dict_get(pdict, "key1");
+    pt = (TestData*)dict_get(pdict, SIZEOF("key1"));
     ck_assert_int_eq(pt->ivalue, 1);
 
     t.ivalue = 2;
-    dict_add(pdict, "key1", (char*)&t, sizeof(TestData));
-    pt = (TestData*)dict_get(pdict, "key1");
+    dict_add(pdict, SIZEOF("key1"), (char*)&t, sizeof(TestData));
+    pt = (TestData*)dict_get(pdict, SIZEOF("key1"));
     ck_assert_int_eq(pt->ivalue, 1);
 }
 END_TEST
@@ -90,10 +92,10 @@ START_TEST(test_dict_contains1)
 {
     TestData t1, t2;
     Dict *pdict = dict_create();
-    dict_add(pdict, "somekey1", (char*)&t1, sizeof(TestData));
-    ck_assert_msg(dict_contains(pdict, "somekey1"), "dict cannot add the data with a key");
-    dict_add(pdict, "somekey2", (char*)&t2, sizeof(TestData));
-    ck_assert_msg(dict_contains(pdict, "somekey2"), "dict cannot add the data with a key");
+    dict_add(pdict, SIZEOF("somekey1"), (char*)&t1, sizeof(TestData));
+    ck_assert_msg(dict_contains(pdict, SIZEOF("somekey1")), "dict cannot add the data with a key");
+    dict_add(pdict, SIZEOF("somekey2"), (char*)&t2, sizeof(TestData));
+    ck_assert_msg(dict_contains(pdict, SIZEOF("somekey2")), "dict cannot add the data with a key");
     dict_free(pdict);
 }
 END_TEST
@@ -104,14 +106,14 @@ START_TEST(test_dict_set1)
     t.ivalue = 1;
     Dict dict;
     dict_init(&dict);
-    dict_add(&dict, "key1", (char*)&t, sizeof(TestData));
+    dict_add(&dict, SIZEOF("key1"), (char*)&t, sizeof(TestData));
 
-    pt = (TestData*)dict_get(&dict, "key1");
+    pt = (TestData*)dict_get(&dict, SIZEOF("key1"));
     ck_assert_int_eq(pt->ivalue, 1);
 
     t.ivalue = 2;
-    dict_set(&dict, "key1", (char*)&t, sizeof(TestData));
-    pt = (TestData*)dict_get(&dict, "key1");
+    dict_set(&dict, SIZEOF("key1"), (char*)&t, sizeof(TestData));
+    pt = (TestData*)dict_get(&dict, SIZEOF("key1"));
     ck_assert_int_eq(pt->ivalue, 2);
 }
 END_TEST

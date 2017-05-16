@@ -4,11 +4,14 @@
 
 #define HASH_SIZE 256
 
-static bool do_dict_contains(Dict *pDict, char *szKey, NamedNode **pNode);
+static bool do_dict_contains(Dict *pDict, char *pKey, size_t iKeySize, KeyedNode **pNode);
 
-unsigned int hash(char *pkey)
+unsigned int hash(char *pKey, size_t iKeySize)
 {
     unsigned long ltb = 0;
+    for (int i = 0; i < iKeySize; i++)
+        ltb += pKey[i];
+    /*
     int len = strlen(pkey);
     for (int i = 0; i < len; i++, pkey++)
     {
@@ -21,6 +24,7 @@ unsigned int hash(char *pkey)
             ioffset = (*pkey - '0') * 2;
         ltb |= (1 << ioffset);
     }
+    */
     return ltb % HASH_SIZE;
 }
 
@@ -49,56 +53,65 @@ void dict_destroy(Dict *pdict)
         slist_destroy(&(pdict->nodes[i]));
 }
 
-void dict_add(Dict *pdict, char *pkey, char *pvalue, size_t ivalsize)
+void dict_add(Dict *pDict, char *pKey, size_t iKeySize, char *pData, size_t iDataSize)
 {
-    if (pdict != NULL && strlen(pkey) > 0 && !dict_contains(pdict, pkey))
+    if (pDict != NULL && pKey != NULL && iKeySize > 0 && 
+        !dict_contains(pDict, pKey, iKeySize) && pData != NULL && iDataSize > 0)
     {
-        NamedNode node;
-        namedNode_init(&node, pkey, pvalue, ivalsize);
-        unsigned int hkey = hash(pkey);
-        slist_push(&(pdict->nodes[hkey]), (char*)&node, sizeof(NamedNode));
+        KeyedNode node;
+        keyedNode_init(&node, pKey, iKeySize, pData, iDataSize);
+        unsigned int hashKey = hash(pKey, iKeySize);
+        slist_push(&(pDict->nodes[hashKey]), (char*)&node, sizeof(KeyedNode));
     }
 }
 
-void dict_set(Dict *pDict, char *szKey, char *pValue, size_t iValSize)
+void dict_set(Dict *pDict, char *pKey, size_t iKeySize, char *pData, size_t iDataSize)
 {
-    NamedNode *pNode = NULL;
-    if (pDict != NULL && strlen(szKey) > 0 && do_dict_contains(pDict, szKey, &pNode))
+    if (pDict != NULL && pKey != NULL && iKeySize > 0 && pData != NULL && iDataSize > 0)
     {
-        namedNode_destroy(pNode);
-        namedNode_init(pNode, szKey, pValue, iValSize);
+        KeyedNode *pNode = NULL;
+        if (do_dict_contains(pDict, pKey, iKeySize, &pNode))
+        {
+            keyedNode_destroy(pNode);
+            keyedNode_init(pNode, pKey, iKeySize, pData, iDataSize);
+        }
     }
 }
 
-char* dict_get(Dict *pdict, char *pkey)
+char* dict_get(Dict *pDict, char *pKey, size_t iKeySize)
 {
-    NamedNode *pnode = NULL;
-    if (pdict != NULL && do_dict_contains(pdict, pkey, &pnode))
-        return pnode->pData;
+    if (pDict != NULL && pKey != NULL && iKeySize > 0)
+    {
+        KeyedNode *pNode = NULL;
+        if (do_dict_contains(pDict, pKey, iKeySize, &pNode))
+            return pNode->pData;
+    }
     return NULL;
 }
 
-bool dict_contains(Dict *pdict, char *pkey)
+bool dict_contains(Dict *pDict, char *pKey, size_t iKeySize)
 {
-    return do_dict_contains(pdict, pkey, NULL);
+    return do_dict_contains(pDict, pKey, iKeySize, NULL);
 }
 
-static bool do_dict_contains(Dict *pdict, char *pkey, NamedNode **ppnode)
+static bool do_dict_contains(Dict *pDict, char *pKey, size_t iKeySize, KeyedNode **ppNode)
 {
-    if (pdict != NULL && strlen(pkey) > 0)
+    if (pDict != NULL && pKey != NULL && iKeySize > 0)
     {
-        unsigned int hkey = hash(pkey);
-        SList *plist = &pdict->nodes[hkey];
-        int icount = slist_get_count(plist);
+        unsigned int hashKey = hash(pKey, iKeySize);
+        SList *pList = &pDict->nodes[hashKey];
+        int icount = slist_get_count(pList);
         if (icount > 0)
         {
             for (int i = 0; i < icount; i++)
             {
-                NamedNode *pnode = (NamedNode*)slist_get(plist, i);
-                if (pnode != NULL && strcmp(pnode->szName, pkey) == 0)
+                KeyedNode *pNode = (KeyedNode*)slist_get(pList, i);
+                if (pNode != NULL &&
+                    pNode->iKeySize == iKeySize &&
+                    memcmp(pNode->pKey, pKey, iKeySize) == 0)
                 {
-                    if (ppnode != NULL)
-                        *ppnode = pnode;
+                    if (ppNode != NULL)
+                        *ppNode = pNode;
                     return true;
                 }
             }

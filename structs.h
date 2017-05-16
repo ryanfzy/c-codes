@@ -9,12 +9,13 @@ typedef struct _node
     size_t isize;
 } Node;
 
-typedef struct _namedNode
+typedef struct _keyedNode
 {
-    char *szName;
+    char *pKey;
+    size_t iKeySize;
     char *pData;
-    size_t iSize;
-} NamedNode;
+    size_t iDataSize;
+} KeyedNode;
 
 // unidirected node
 typedef struct _unidnode
@@ -30,9 +31,9 @@ void node_free(Node *pnode);
 UnidNode* unidnode_create(char *pdata, size_t isize);
 void unidnode_free(UnidNode *pnode);
 
-NamedNode* namedNode_create(char *szName, char *pData, size_t iSize);
-void namedNode_init(NamedNode *pNode, char *szName, char *pData, size_t iSize);
-void namedNode_free(NamedNode *pnode);
-void namedNode_destroy(NamedNode *pnode);
+KeyedNode* keyedNode_create(char *pKey, size_t iKeySize, char *pData, size_t iDataSize);
+void keyedNode_init(KeyedNode *pNode, char *pKey, size_t iKeySize, char *pData, size_t iDataSize);
+void keyedNode_free(KeyedNode *pnode);
+void keyedNode_destroy(KeyedNode *pnode);
 
 #endif
