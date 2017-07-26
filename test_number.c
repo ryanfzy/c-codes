@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <check.h>
 #include "number.h"
+#include "binary.h"
 
 START_TEST(test_int2str)
 {
@@ -22,6 +23,12 @@ START_TEST(test_addbinary)
     char szRet[32] = {0};
     bin_add_ex(szB1, strlen(szB1), szB2, strlen(szB2), szRet, 128);
     ck_assert_msg(strcmp(szRet, "1101100000000") == 0, "add result is wrong");
+
+    szB1 = "11";
+    szB2 = "00";
+    memset(szRet, 0, 32);
+    bin_add_ex(szB1, strlen(szB1), szB2, strlen(szB2), szRet, 128);
+    ck_assert_msg(strcmp(szRet, "11") == 0, "add result is wrong");
 }
 END_TEST
 
@@ -51,8 +58,17 @@ START_TEST(test_bin_div)
     char *szB2 = "1111011";
     char szRet[32] = {0};
     bin_div_ex(szB1, strlen(szB1), szB2, strlen(szB2), szRet, 32);
-    printf("%s\n", szRet);
     ck_assert_msg(strcmp(szRet, "1101") == 0, "div result is wrong");
+}
+END_TEST
+
+START_TEST(test_bin_int2bin)
+{
+    char *szInt = "123";
+    char szRet[32] = {0};
+    int2bin_ex(szInt, strlen(szInt), szRet, 32);
+    printf("%s\n", szRet);
+    ck_assert_msg(strcmp(szRet, "1111011") == 0, "int to bin is wrong");
 }
 END_TEST
 
@@ -65,6 +81,7 @@ Suite* make_add_suit(void)
     tcase_add_test(tc_stack, test_bin_mul);
     tcase_add_test(tc_stack, test_bin_sub);
     tcase_add_test(tc_stack, test_bin_div);
+    tcase_add_test(tc_stack, test_bin_int2bin);
     suite_add_tcase(s, tc_stack);
     return s;
 }
