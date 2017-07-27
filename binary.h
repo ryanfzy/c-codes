@@ -12,6 +12,7 @@ typedef struct _binary
 
 bool bin_init_istr(Bin *pBin, char *szInt, size_t iLen);
 bool bin_init_bstr(Bin *pBin, char *szBin, size_t iLen);
+bool bin_init_fstr(Bin *pBin, char *szFloat, size_t iLen);
 
 void bin2bstr(Bin *pBin, char *szBin, size_t iLen);
 

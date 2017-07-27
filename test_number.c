@@ -72,6 +72,14 @@ START_TEST(test_bin_int2bin)
 }
 END_TEST
 
+START_TEST(test_bin_float2bin)
+{
+    char *szFloat = "10.125";
+    Bin binFloat;
+    bin_init_fstr(&binFloat, szFloat, strlen(szFloat));
+}
+END_TEST
+
 Suite* make_add_suit(void)
 {
     Suite *s = suite_create("number");
@@ -82,6 +90,7 @@ Suite* make_add_suit(void)
     tcase_add_test(tc_stack, test_bin_sub);
     tcase_add_test(tc_stack, test_bin_div);
     tcase_add_test(tc_stack, test_bin_int2bin);
+    tcase_add_test(tc_stack, test_bin_float2bin);
     suite_add_tcase(s, tc_stack);
     return s;
 }

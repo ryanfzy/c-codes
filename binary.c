@@ -104,37 +104,129 @@ bool bin_init_istr(Bin *pBin, char *szStr, size_t iLen)
     return false;
 }
 
-/*
-void _fstr2bin(Bin *pBin, char *szStr, size_t iLen)
+int _bin_cmp(Bin *pB1, Bin *pB2)
 {
+    if (pB1 == NULL && pB2 == NULL)
+        return 0;
+    else if (pB1 != NULL && pB2 == NULL)
+        return 1;
+    else if (pB1 == NULL && pB2 != NULL)
+        return -1;
+    else if (pB1 != NULL && pB2 != NULL)
+    {
+        for (int i = 0; i < 32; i++)
+        {
+            if (pB1->cBin[i] > pB2->cBin[i])
+                return 1;
+            else if (pB1->cBin[i] < pB2->cBin[i])
+                return -1;
+        }
+    }
+    return 0;
 }
 
-void fstr2bin(Bin *pBin, char *szStr, size_t iLen)
+void _bin_lshift(Bin *pBin, int iShift)
+{
+    if (pBin != NULL)
+    {
+        for (int i = 0, j = iShift; i < 32; i++, j++)
+        {
+            if (j < 32)
+                pBin->cBin[i] = pBin->cBin[j];
+            else
+                pBin->cBin[i] = '0';
+        }
+    }
+}
+
+bool _bin_is_larger(Bin *pB1, Bin *pB2)
+{
+    if (pB1 != NULL && pB2 != NULL)
+    {
+        for (int i = 0; i < 32; i++)
+        {
+            if (pB1->cBin[i] > pB2->cBin[i])
+                return true;
+            else if (pB1->cBin[i] < pB2->cBin[i])
+                return false;
+        }
+    }
+    return false;
+}
+
+void _fstr2bin(Bin *pBin, char *szStr, size_t iLen)
 {
     if (pBin != NULL && szStr != NULL && iLen > 0)
     {
-        int iDecimalPoint = 0;
+        _bin_init(pBin);
+
+        Bin binNum;
+        bin_init_istr(&binNum, szStr, iLen);
+
+        Bin binDen;
+        _bin_init(&binDen);
+        bin_add(&binDen, &(BINS[1]), &binDen);
+        for (int i = 0; i < iLen; i++)
+            bin_mul(&binDen, &(BINS[10]), &binDen);
+
+        for (int i = 0; i < 32; i++)
+        {
+            _bin_lshift(&binNum, 1);
+            if (bin_eq(&binNum, &binDen))
+            {
+                pBin->cBin[i] = '1';
+                return;
+            }
+            else if (_bin_is_larger(&binNum, &binDen))
+            {
+                pBin->cBin[i] = '1';
+                bin_sub(&binNum, &binDen, &binNum);
+                pBin->cBin[i] = '1';
+            }
+        }
+    }
+}
+
+bool _fstr_get_parts(char *szFloat, size_t iLen, Bin *pB1, Bin *pB2)
+{
+    if (szFloat != NULL && iLen > 0 && pB1 != NULL && pB2 != NULL)
+    {
+        int iPoint = 0;
         for (int i = 0; i < iLen; i++)
         {
-            if (szStr[i] == '.')
+            if (szFloat[i] == '.')
             {
-                iDecimalPoint = i;
+                iPoint = i;
                 break;
             }
         }
-
-        Bin binPartOne, binPartTwo;
-        bin_init(&binPartOne);
-        bin_init(&binPartTwo);
-        istr2bin(&binPartOne, szStr, iDecimalPoint);
-        _fstr2bin(&binPartTwo, szStr[iDecimalPoint+1], iLen-iDecimalPoint);
+        bin_init_istr(pB1, szFloat, iPoint);
+        _fstr2bin(pB2, szFloat+iPoint+1, iLen-iPoint-1);
+        return true;
     }
+    return false;
 }
-*/
 
-void bin_add(Bin *pB1, Bin *pB2, Bin *pBRet)
+bool bin_init_fstr(Bin *pBin, char *szFloat, size_t iLen)
 {
-    if (pB1 != NULL && pB2 != NULL && pBRet)
+    if (pBin != NULL && szFloat != NULL && iLen > 0)
+    {
+        Bin bin1, bin2;
+        if (_fstr_get_parts(szFloat, iLen, &bin1, &bin2))
+        {
+            printf("bin1:");
+            _bin_print(&bin1);
+            printf("\nbin2:");
+            _bin_print(&bin2);
+            printf("\n");
+        }
+    }
+    return false;
+}
+
+void _bin_add(Bin *pB1, Bin *pB2, Bin *pBRet)
+{
+    if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
     {
         char chCarry = '0';
         for (int i = 31; i >= 0; i--)
@@ -152,20 +244,18 @@ void bin_add(Bin *pB1, Bin *pB2, Bin *pBRet)
     }
 }
 
-
-void _bin_lshift(Bin *pBin, int iShift)
+void bin_add(Bin *pB1, Bin *pB2, Bin *pBRet)
 {
-    if (pBin != NULL)
+    if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
     {
-        for (int i = 0, j = iShift; i < 32; i++, j++)
-        {
-            if (j < 32)
-                pBin->cBin[i] = pBin->cBin[j];
-            else
-                pBin->cBin[i] = '0';
-        }
+        Bin bin1, bin2;
+        _bin_copy(&bin1, pB1);
+        _bin_copy(&bin2, pB2);
+        _bin_init(pBRet);
+        _bin_add(&bin1, &bin2, pBRet);
     }
 }
+
 
 void _bin_rshift(Bin *pBin, int iShift)
 {
@@ -181,7 +271,7 @@ void _bin_rshift(Bin *pBin, int iShift)
     }
 }
 
-void bin_mul(Bin *pB1, Bin *pB2, Bin *pBRet)
+void _bin_mul(Bin *pB1, Bin *pB2, Bin *pBRet)
 {
     if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
     {
@@ -199,6 +289,18 @@ void bin_mul(Bin *pB1, Bin *pB2, Bin *pBRet)
     }
 }
 
+void bin_mul(Bin *pB1, Bin *pB2, Bin *pBRet)
+{
+    if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
+    {
+        Bin bin1, bin2;
+        _bin_copy(&bin1, pB1);
+        _bin_copy(&bin2, pB2);
+        _bin_init(pBRet);
+        _bin_mul(&bin1, &bin2, pBRet);
+    }
+}
+
 bool bin_eq(Bin *pB1, Bin *pB2)
 {
     if (pB1 != NULL && pB2 != NULL)
@@ -213,7 +315,7 @@ bool bin_eq(Bin *pB1, Bin *pB2)
     return false;
 }
 
-void bin_div(Bin *pB1, Bin *pB2, Bin *pBRet)
+void _bin_div(Bin *pB1, Bin *pB2, Bin *pBRet)
 {
     if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
     {
@@ -239,6 +341,18 @@ void bin_div(Bin *pB1, Bin *pB2, Bin *pBRet)
     }
 }
 
+void bin_div(Bin *pB1, Bin *pB2, Bin *pBRet)
+{
+    if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
+    {
+        Bin bin1, bin2;
+        _bin_copy(&bin1, pB1);
+        _bin_copy(&bin2, pB2);
+        _bin_init(pBRet);
+        _bin_div(&bin1, &bin2, pBRet);
+    }
+}
+
 void _bin2cmplmnt(Bin *pBin)
 {
     if (pBin != NULL)
@@ -261,7 +375,7 @@ void _bin_get_2cmplmnt(Bin *pTo, Bin *pFrom)
     }
 }
 
-void bin_sub(Bin *pB1, Bin *pB2, Bin *pBRet)
+void _bin_sub(Bin *pB1, Bin *pB2, Bin *pBRet)
 {
     // here use 2's complement method
     if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
@@ -269,6 +383,18 @@ void bin_sub(Bin *pB1, Bin *pB2, Bin *pBRet)
         Bin bin2cmplmnt;
         _bin_get_2cmplmnt(&bin2cmplmnt, pB2);
         bin_add(pB1, &bin2cmplmnt, pBRet);
+    }
+}
+
+void bin_sub(Bin *pB1, Bin *pB2, Bin *pBRet)
+{
+    if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
+    {
+        Bin bin1, bin2;
+        _bin_copy(&bin1, pB1);
+        _bin_copy(&bin2, pB2);
+        _bin_init(pBRet);
+        _bin_sub(&bin1, &bin2, pBRet);
     }
 }
 
