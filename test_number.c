@@ -74,9 +74,20 @@ END_TEST
 
 START_TEST(test_bin_float2bin)
 {
-    char *szFloat = "10.125";
+    char *szFloat = "10.7";
+    char szRet[33] = {0};
     Bin binFloat;
     bin_init_fstr(&binFloat, szFloat, strlen(szFloat));
+    bin2bstr(&binFloat, szRet, 33);
+    ck_assert_msg(strcmp(szRet, "01000001001010110011001100110011") == 0, "float 2 bin is wrong");
+
+    bin_init_fstr(&binFloat, "26.87", 5);
+    bin2bstr(&binFloat, szRet, 33);
+    ck_assert_msg(strcmp(szRet, "01000001110101101111010111000011") == 0, "float 2 bin is wrong");
+
+    bin_init_fstr(&binFloat, "0.004", 5);
+    bin2bstr(&binFloat, szRet, 33);
+    ck_assert_msg(strcmp(szRet, "00111011100000110001001001101111") == 0, "float 2 bin is wrong");
 }
 END_TEST
 

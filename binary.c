@@ -187,6 +187,20 @@ void _fstr2bin(Bin *pBin, char *szStr, size_t iLen)
     }
 }
 
+void _bin_rshift(Bin *pBin, int iShift)
+{
+    if (pBin != NULL)
+    {
+        for (int i = 31, j = 31-iShift; i >= 0; i--, j--)
+        {
+            if (j >= 0)
+                pBin->cBin[i] = pBin->cBin[j];
+            else
+                pBin->cBin[i] = '0';
+        }
+    }
+}
+
 bool _fstr_get_parts(char *szFloat, size_t iLen, Bin *pB1, Bin *pB2)
 {
     if (szFloat != NULL && iLen > 0 && pB1 != NULL && pB2 != NULL)
@@ -207,6 +221,57 @@ bool _fstr_get_parts(char *szFloat, size_t iLen, Bin *pB1, Bin *pB2)
     return false;
 }
 
+void _fstr_add_parts(Bin *pB1, Bin *pB2, Bin *pBRet)
+{
+    if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
+    {
+        int iExp = 127;
+        for (int i = 0, j = 31; i < 32; i++, j--)
+        {
+            if (pB1->cBin[i] == '1')
+            {
+                iExp = iExp + j;
+                _bin_lshift(pB1, i+1);
+                break;
+            }
+        }
+        for (int i = 0; i < 32; i++)
+        {
+            if (pB2->cBin[i] == '1')
+            {
+                if (iExp == 127)
+                {
+                    _bin_lshift(pB2, i+1); 
+                    iExp = 127-i-1;
+                }
+                else
+                    _bin_rshift(pB2, iExp - 127);
+                break;
+            }
+        }
+        bin_add(pB1, pB2, pBRet);
+        bool bMoreValue = false;
+        for (int i = 23; i < 32; i++)
+        {
+            if (pBRet->cBin[i] == '1')
+            {
+                bMoreValue = true;
+                break;
+            }
+        }
+        _bin_rshift(pBRet, 9);
+        if (bMoreValue)
+            pBRet->cBin[31] = '1';
+
+        Bin binExp;
+        _bin_init(&binExp);
+        for (int i = 0; i < iExp; i++)
+            bin_add(&binExp, &(BINS[1]), &binExp);
+        _bin_lshift(&binExp, 23);
+        bin_add(pBRet, &binExp, pBRet);
+    }
+}
+
 bool bin_init_fstr(Bin *pBin, char *szFloat, size_t iLen)
 {
     if (pBin != NULL && szFloat != NULL && iLen > 0)
@@ -214,11 +279,8 @@ bool bin_init_fstr(Bin *pBin, char *szFloat, size_t iLen)
         Bin bin1, bin2;
         if (_fstr_get_parts(szFloat, iLen, &bin1, &bin2))
         {
-            printf("bin1:");
-            _bin_print(&bin1);
-            printf("\nbin2:");
-            _bin_print(&bin2);
-            printf("\n");
+            _bin_init(pBin);
+            _fstr_add_parts(&bin1, &bin2, pBin);
         }
     }
     return false;
@@ -253,21 +315,6 @@ void bin_add(Bin *pB1, Bin *pB2, Bin *pBRet)
         _bin_copy(&bin2, pB2);
         _bin_init(pBRet);
         _bin_add(&bin1, &bin2, pBRet);
-    }
-}
-
-
-void _bin_rshift(Bin *pBin, int iShift)
-{
-    if (pBin != NULL)
-    {
-        for (int i = 31, j = 31-iShift; i >= 0; i--, j--)
-        {
-            if (j >= 0)
-                pBin->cBin[i] = pBin->cBin[j];
-            else
-                pBin->cBin[i] = '0';
-        }
     }
 }
 
@@ -395,6 +442,15 @@ void bin_sub(Bin *pB1, Bin *pB2, Bin *pBRet)
         _bin_copy(&bin2, pB2);
         _bin_init(pBRet);
         _bin_sub(&bin1, &bin2, pBRet);
+    }
+}
+
+void bin2bstr(Bin *pBin, char *szStr, size_t iSize)
+{
+    if (pBin != NULL && szStr != NULL && iSize > 31)
+    {
+        for (int i = 0; i < 32; i++)
+            szStr[i] = pBin->cBin[i];
     }
 }
 
