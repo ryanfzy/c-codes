@@ -20,15 +20,22 @@ START_TEST(test_addbinary)
 {
     char *szB1 = "10011010010";
     char *szB2 = "1011000101110";
-    char szRet[32] = {0};
-    bin_add_ex(szB1, strlen(szB1), szB2, strlen(szB2), szRet, 128);
-    ck_assert_msg(strcmp(szRet, "1101100000000") == 0, "add result is wrong");
+    char szRet[33] = {0};
+
+    Bin bin1, bin2, binRet;
+    bin_init_bstr(&bin1, szB1, strlen(szB1));
+    bin_init_bstr(&bin2, szB2, strlen(szB2));
+    bin_add(&bin1, &bin2, &binRet);
+    bin2bstr(&binRet, szRet, 32);
+    ck_assert_msg(strcmp(szRet, "00000000000000000001101100000000") == 0, "add result is wrong");
 
     szB1 = "11";
     szB2 = "00";
-    memset(szRet, 0, 32);
-    bin_add_ex(szB1, strlen(szB1), szB2, strlen(szB2), szRet, 128);
-    ck_assert_msg(strcmp(szRet, "11") == 0, "add result is wrong");
+    bin_init_bstr(&bin1, szB1, strlen(szB1));
+    bin_init_bstr(&bin2, szB2, strlen(szB2));
+    bin_add(&bin1, &bin2, &binRet);
+    bin2bstr(&binRet, szRet, 32);
+    ck_assert_msg(strcmp(szRet, "00000000000000000000000000000011") == 0, "add result is wrong");
 }
 END_TEST
 
@@ -36,9 +43,14 @@ START_TEST(test_bin_mul)
 {
     char *szB1 = "1111011";
     char *szB2 = "1101";
-    char szRet[32] = {0};
-    bin_mul_ex(szB1, strlen(szB1), szB2, strlen(szB2), szRet, 32);
-    ck_assert_msg(strcmp(szRet, "11000111111") == 0, "mul result is wrong");
+    char szRet[33] = {0};
+
+    Bin bin1, bin2, binRet;
+    bin_init_bstr(&bin1, szB1, strlen(szB1));
+    bin_init_bstr(&bin2, szB2, strlen(szB2));
+    bin_mul(&bin1, &bin2, &binRet);
+    bin2bstr(&binRet, szRet, 32);
+    ck_assert_msg(strcmp(szRet, "00000000000000000000011000111111") == 0, "mul result is wrong");
 }
 END_TEST
 
@@ -46,9 +58,14 @@ START_TEST(test_bin_sub)
 {
     char *szB1 = "00111000";
     char *szB2 = "00101011";
-    char szRet[32] = {0};
-    bin_sub_ex(szB1, strlen(szB1), szB2, strlen(szB2), szRet, 32);
-    ck_assert_msg(strcmp(szRet, "1101") == 0, "sub result is wrong");
+    char szRet[33] = {0};
+
+    Bin bin1, bin2, binRet;
+    bin_init_bstr(&bin1, szB1, strlen(szB1));
+    bin_init_bstr(&bin2, szB2, strlen(szB2));
+    bin_sub(&bin1, &bin2, &binRet);
+    bin2bstr(&binRet, szRet, 32);
+    ck_assert_msg(strcmp(szRet, "00000000000000000000000000001101") == 0, "sub result is wrong");
 }
 END_TEST
 
@@ -56,19 +73,26 @@ START_TEST(test_bin_div)
 {
     char *szB1 = "11000111111";
     char *szB2 = "1111011";
-    char szRet[32] = {0};
-    bin_div_ex(szB1, strlen(szB1), szB2, strlen(szB2), szRet, 32);
-    ck_assert_msg(strcmp(szRet, "1101") == 0, "div result is wrong");
+    char szRet[33] = {0};
+
+    Bin bin1, bin2, binRet;
+    bin_init_bstr(&bin1, szB1, strlen(szB1));
+    bin_init_bstr(&bin2, szB2, strlen(szB2));
+    bin_div(&bin1, &bin2, &binRet);
+    bin2bstr(&binRet, szRet, 32);
+    ck_assert_msg(strcmp(szRet, "00000000000000000000000000001101") == 0, "div result is wrong");
 }
 END_TEST
 
 START_TEST(test_bin_int2bin)
 {
     char *szInt = "123";
-    char szRet[32] = {0};
-    int2bin_ex(szInt, strlen(szInt), szRet, 32);
-    printf("%s\n", szRet);
-    ck_assert_msg(strcmp(szRet, "1111011") == 0, "int to bin is wrong");
+    char szRet[33] = {0};
+
+    Bin bin;
+    bin_init_istr(&bin, szInt, strlen(szInt));
+    bin2bstr(&bin, szRet, 32);
+    ck_assert_msg(strcmp(szRet, "00000000000000000000000001111011") == 0, "int to bin is wrong");
 }
 END_TEST
 
