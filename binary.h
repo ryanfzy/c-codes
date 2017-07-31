@@ -6,11 +6,23 @@
 #include <stdbool.h>
 
 #define BIN_LEN 32
+#define CHAR_BITS 8
+#define CHAR_NUM BIN_LEN/CHAR_BITS
+
+typedef struct _bin32
+{
+    unsigned char cBin[CHAR_NUM];
+} Bin32;
 
 typedef struct _binary
 {
     char cBin[BIN_LEN];
 } Bin;
+
+void bin32_copy(Bin32 *pBTo, Bin32 *pBFrom);
+bool bin32_init(Bin32 *pBin);
+void bin32_lshift(Bin32 *pBin, int iShift);
+void bin32_rshift(Bin32 *pBin, int iShift);
 
 bool bin_init_istr(Bin *pBin, char *szInt, size_t iLen);
 bool bin_init_bstr(Bin *pBin, char *szBin, size_t iLen);

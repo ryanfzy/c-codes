@@ -115,6 +115,65 @@ START_TEST(test_bin_float2bin)
 }
 END_TEST
 
+START_TEST(test_bin32_init)
+{
+    Bin32 bin32;
+    bin32_init(&bin32);
+    for (int i = 0; i < CHAR_NUM; i++)
+        ck_assert_int_eq(bin32.cBin[i], 0x00);
+}
+END_TEST
+
+START_TEST(test_bin32_lshift)
+{
+    Bin32 bin32 = {{0xff,0xff,0xff,0xff}};
+    bin32_lshift(&bin32, 11);
+    ck_assert_int_eq(bin32.cBin[0], 0xff);
+    ck_assert_int_eq(bin32.cBin[1], 0xff);
+    ck_assert_int_eq(bin32.cBin[2], 0xf8);
+    ck_assert_int_eq(bin32.cBin[3], 0x00);
+
+    Bin32 bin2 = {{0xff,0xff,0xff,0xff}};
+    bin32_lshift(&bin2, 3);
+    ck_assert_int_eq(bin2.cBin[0], 0xff);
+    ck_assert_int_eq(bin2.cBin[1], 0xff);
+    ck_assert_int_eq(bin2.cBin[2], 0xff);
+    ck_assert_int_eq(bin2.cBin[3], 0xf8);
+
+    Bin32 bin3 = {{0xff,0xff,0xff,0xff}};
+    bin32_lshift(&bin3, 24);
+    ck_assert_int_eq(bin3.cBin[0], 0xff);
+    ck_assert_int_eq(bin3.cBin[1], 0x00);
+    ck_assert_int_eq(bin3.cBin[2], 0x00);
+    ck_assert_int_eq(bin3.cBin[3], 0x00);
+}
+END_TEST
+
+START_TEST(test_bin32_rshift)
+{
+    Bin32 bin32 = {{0xff,0xff,0xff,0xff}};
+    bin32_rshift(&bin32, 11);
+    ck_assert_int_eq(bin32.cBin[0], 0x00);
+    ck_assert_int_eq(bin32.cBin[1], 0x1f);
+    ck_assert_int_eq(bin32.cBin[2], 0xff);
+    ck_assert_int_eq(bin32.cBin[3], 0xff);
+
+    Bin32 bin2 = {{0xff,0xff,0xff,0xff}};
+    bin32_rshift(&bin2, 3);
+    ck_assert_int_eq(bin2.cBin[0], 0x1f);
+    ck_assert_int_eq(bin2.cBin[1], 0xff);
+    ck_assert_int_eq(bin2.cBin[2], 0xff);
+    ck_assert_int_eq(bin2.cBin[3], 0xff);
+
+    Bin32 bin3 = {{0xff,0xff,0xff,0xff}};
+    bin32_rshift(&bin3, 24);
+    ck_assert_int_eq(bin3.cBin[0], 0x00);
+    ck_assert_int_eq(bin3.cBin[1], 0x00);
+    ck_assert_int_eq(bin3.cBin[2], 0x00);
+    ck_assert_int_eq(bin3.cBin[3], 0xff);
+}
+END_TEST
+
 Suite* make_add_suit(void)
 {
     Suite *s = suite_create("number");
@@ -126,6 +185,9 @@ Suite* make_add_suit(void)
     tcase_add_test(tc_stack, test_bin_div);
     tcase_add_test(tc_stack, test_bin_int2bin);
     tcase_add_test(tc_stack, test_bin_float2bin);
+    tcase_add_test(tc_stack, test_bin32_init);
+    tcase_add_test(tc_stack, test_bin32_lshift);
+    tcase_add_test(tc_stack, test_bin32_rshift);
     suite_add_tcase(s, tc_stack);
     return s;
 }

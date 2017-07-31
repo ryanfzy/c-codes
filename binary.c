@@ -1,6 +1,21 @@
 #include <string.h>
 #include "binary.h"
 
+static Bin32 BIN32S[11] =
+{
+    {{0x00,0x00,0x00,0x00}},
+    {{0x00,0x00,0x00,0x01}},
+    {{0x00,0x00,0x00,0x02}},
+    {{0x00,0x00,0x00,0x03}},
+    {{0x00,0x00,0x00,0x04}},
+    {{0x00,0x00,0x00,0x05}},
+    {{0x00,0x00,0x00,0x06}},
+    {{0x00,0x00,0x00,0x07}},
+    {{0x00,0x00,0x00,0x08}},
+    {{0x00,0x00,0x00,0x09}},
+    {{0x00,0x00,0x00,0x0a}},
+};
+
 static Bin BINS[11] = 
 {
     {"00000000000000000000000000000000"},
@@ -16,6 +31,12 @@ static Bin BINS[11] =
     {"00000000000000000000000000001010"},
 };
 
+void bin32_copy(Bin32 *pBTo, Bin32 *pBFrom)
+{
+    if (pBFrom != NULL && pBTo != NULL)
+        *pBTo = *pBFrom;
+}
+
 void _bin_copy(Bin *pBTo, Bin *pBFrom)
 {
     if (pBFrom != NULL && pBTo != NULL)
@@ -23,6 +44,16 @@ void _bin_copy(Bin *pBTo, Bin *pBFrom)
         for (int i = 0; i < BIN_LEN; i++)
             pBTo->cBin[i] = pBFrom->cBin[i];
     }
+}
+
+bool bin32_init(Bin32 *pBin)
+{
+    if (pBin != NULL)
+    {
+        *pBin = BIN32S[0];
+        return true;
+    }
+    return false;
 }
 
 bool _bin_init(Bin *pBin)
@@ -65,6 +96,28 @@ void bin_lshift(Bin *pBin, int iShift)
     {
         for (int i = 0, j = iShift; i < BIN_LEN; i++, j++)
             pBin->cBin[i] = j < BIN_LEN ? pBin->cBin[j] : '0';
+    }
+}
+
+void bin32_lshift(Bin32 *pBin, int iShift)
+{
+    if (pBin != NULL)
+    {
+        int icShift = iShift % CHAR_BITS;
+        int iMskShift = CHAR_BITS - icShift;
+        unsigned char cMsk = 0xff << iMskShift;
+        for (int i = 0, j = (iShift / CHAR_BITS); i < CHAR_NUM; i++, j++)
+        {
+            if (BIN_LEN - i * CHAR_BITS > iShift)
+            {
+                unsigned char cShifted = pBin->cBin[j] & cMsk >> iMskShift;
+                pBin->cBin[i] = pBin->cBin[j] << icShift;
+                if (i > 0)
+                    pBin->cBin[i-1] |= cShifted;
+            }
+            else
+                pBin->cBin[i] &= 0x00;
+        }
     }
 }
 
@@ -142,6 +195,28 @@ void _fstr2bin(Bin *pBin, char *szStr, size_t iLen)
                 bin_sub(&binNum, &binDen, &binNum);
                 pBin->cBin[i] = '1';
             }
+        }
+    }
+}
+
+void bin32_rshift(Bin32 *pBin, int iShift)
+{
+    if (pBin != NULL)
+    {
+        int icShift = iShift % CHAR_BITS;
+        int iMskShift = CHAR_BITS - icShift;
+        unsigned char cMsk = 0xff >> iMskShift;
+        for (int i = CHAR_NUM-1, j = (CHAR_NUM - iShift / CHAR_BITS - 1); i >= 0; i--, j--)
+        {
+            if (i * CHAR_BITS + CHAR_BITS > iShift)
+            {
+                unsigned char cShifted = pBin->cBin[j] & cMsk << iMskShift;
+                pBin->cBin[i] = pBin->cBin[j] >> icShift;
+                if (i < CHAR_NUM-1)
+                    pBin->cBin[i+1] |= cShifted;
+            }
+            else
+                pBin->cBin[i] &= 0x00;
         }
     }
 }
