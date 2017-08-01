@@ -103,15 +103,14 @@ void bin32_lshift(Bin32 *pBin, int iShift)
 {
     if (pBin != NULL)
     {
-        int icShift = iShift % CHAR_BITS;
-        int iMskShift = CHAR_BITS - icShift;
-        unsigned char cMsk = 0xff << iMskShift;
+        int iLshift = iShift % CHAR_BITS;
+        int iRshift = CHAR_BITS - iLshift;
         for (int i = 0, j = (iShift / CHAR_BITS); i < CHAR_NUM; i++, j++)
         {
             if (BIN_LEN - i * CHAR_BITS > iShift)
             {
-                unsigned char cShifted = pBin->cBin[j] & cMsk >> iMskShift;
-                pBin->cBin[i] = pBin->cBin[j] << icShift;
+                unsigned char cShifted = pBin->cBin[j] >> iRshift;
+                pBin->cBin[i] = pBin->cBin[j] << iLshift;
                 if (i > 0)
                     pBin->cBin[i-1] |= cShifted;
             }
@@ -203,16 +202,16 @@ void bin32_rshift(Bin32 *pBin, int iShift)
 {
     if (pBin != NULL)
     {
-        int icShift = iShift % CHAR_BITS;
-        int iMskShift = CHAR_BITS - icShift;
-        unsigned char cMsk = 0xff >> iMskShift;
-        for (int i = CHAR_NUM-1, j = (CHAR_NUM - iShift / CHAR_BITS - 1); i >= 0; i--, j--)
+        int iRshift = iShift % CHAR_BITS;
+        int iLshift = CHAR_BITS - iRshift;
+        int iLastIndex = CHAR_NUM - 1;
+        for (int i = iLastIndex, j = (iLastIndex - iShift / CHAR_BITS); i >= 0; i--, j--)
         {
-            if (i * CHAR_BITS + CHAR_BITS > iShift)
+            if ((i+1) * CHAR_BITS > iShift)
             {
-                unsigned char cShifted = pBin->cBin[j] & cMsk << iMskShift;
-                pBin->cBin[i] = pBin->cBin[j] >> icShift;
-                if (i < CHAR_NUM-1)
+                unsigned char cShifted = pBin->cBin[j] << iLshift;
+                pBin->cBin[i] = pBin->cBin[j] >> iRshift;
+                if (i < iLastIndex)
                     pBin->cBin[i+1] |= cShifted;
             }
             else
@@ -342,6 +341,30 @@ bool bin_init_fstr(Bin *pBin, char *szFloat, size_t iLen)
         }
     }
     return false;
+}
+
+void bin32_add(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet)
+{
+    if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
+    {
+        char chCarry = 0x00;
+        for (int i = CHAR_NUM - 1; i >= 0; i--)
+        {
+            for (int j = 0; j < 8; j++)
+            {
+                char chCur = 0x00;
+                int iMsk = 1 << j;
+                if ((pB1->cBin[i] & iMsk) == (pB2->cBin[i] & iMsk))
+                {
+                    chCur = chCarry;
+                    chCarry = (pB1->cBin[i] & iMsk) ? 0x01 : 0x00;
+                }
+                else
+                    chCur = (chCarry == 0x01) ? 0x00 : 0x01;
+                pBRet->cBin[i] |= (chCur << j);
+            }
+        }
+    }
 }
 
 void _bin_add(Bin *pB1, Bin *pB2, Bin *pBRet)
@@ -488,6 +511,38 @@ void bin_sub(Bin *pB1, Bin *pB2, Bin *pBRet)
         _bin_init(pBRet);
         _bin_sub(&bin1, &bin2, pBRet);
     }
+}
+
+void _bin32_reverse_str(char *szStr, size_t iLen)
+{
+    int iLastIndex = iLen - 1;
+    for (int i = 0; i < iLen / 2; i++)
+    {
+        int iIndexToSwap = iLastIndex-i;
+        if (iIndexToSwap != i)
+        {
+            char ch = szStr[i];
+            szStr[i] = szStr[iIndexToSwap];
+            szStr[iIndexToSwap] = ch;
+        }
+    }
+}
+
+void bin322bstr(Bin32 *pBin, char *szStr, size_t iLen)
+{
+    if (pBin != NULL && szStr != NULL && iLen > 0)
+    {
+        for (int i = CHAR_NUM-1, j = 0; i >= 0; i--, j+=8)
+        {
+            for (int k = 0; k < 8; k++)
+            {
+                int iIndex = j + k;
+                if (iIndex < iLen)
+                    szStr[iIndex] = (pBin->cBin[i] & (1 << k)) ? '1' : '0';
+            }
+        }
+    }
+    _bin32_reverse_str(szStr, iLen < BIN_LEN ? iLen : BIN_LEN);
 }
 
 void bin2bstr(Bin *pBin, char *szStr, size_t iSize)

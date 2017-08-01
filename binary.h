@@ -23,6 +23,9 @@ void bin32_copy(Bin32 *pBTo, Bin32 *pBFrom);
 bool bin32_init(Bin32 *pBin);
 void bin32_lshift(Bin32 *pBin, int iShift);
 void bin32_rshift(Bin32 *pBin, int iShift);
+void bin322bstr(Bin32 *pBin, char *szStr, size_t iLen);
+
+void bin32_add(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet);
 
 bool bin_init_istr(Bin *pBin, char *szInt, size_t iLen);
 bool bin_init_bstr(Bin *pBin, char *szBin, size_t iLen);
