@@ -412,6 +412,28 @@ void _bin_mul(Bin *pB1, Bin *pB2, Bin *pBRet)
     }
 }
 
+void bin32_mul(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet)
+{
+    if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
+    {
+        for (int i = CHAR_NUM -1 ; i >= 0; i--)
+        {
+            for (int j = 0; j < CHAR_BITS; j++)
+            {
+                int iMsk = 1 << j;
+                if (pB2->cBin[i] & iMsk)
+                {
+                    Bin32 lastRet = *pBRet;
+                    for (int k = 0; k < CHAR_NUM; k++)
+                        pBRet->cBin[k] = 0x00;
+                    bin32_add(&lastRet, pB1, pBRet);
+                }
+                bin32_lshift(pB1, 1);
+            }
+        }
+    }
+}
+
 void bin_mul(Bin *pB1, Bin *pB2, Bin *pBRet)
 {
     if (pB1 != NULL && pB2 != NULL && pBRet != NULL)

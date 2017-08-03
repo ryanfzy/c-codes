@@ -59,6 +59,13 @@ START_TEST(test_bin_mul)
     bin_mul(&bin1, &bin2, &binRet);
     bin2bstr(&binRet, szRet, 32);
     ck_assert_msg(strcmp(szRet, "00000000000000000000011000111111") == 0, "mul result is wrong");
+
+    Bin32 b1 = {{0x00,0x00,0x00,0x7b}};
+    Bin32 b2 = {{0x00,0x00,0x00,0x0d}};
+    Bin32 br = {{0x00,0x00,0x00,0x00}};
+    bin32_mul(&b1, &b2, &br);
+    bin322bstr(&br, szRet, 32);
+    ck_assert_msg(strcmp(szRet, "00000000000000000000011000111111") == 0, "mul result is wrong");
 }
 END_TEST
 

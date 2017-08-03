@@ -27,6 +27,7 @@ void bin322bstr(Bin32 *pBin, char *szStr, size_t iLen);
 
 void bin32_add(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet);
 void bin32_sub(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet);
+void bin32_mul(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet);
 
 bool bin_init_istr(Bin *pBin, char *szInt, size_t iLen);
 bool bin_init_bstr(Bin *pBin, char *szBin, size_t iLen);
