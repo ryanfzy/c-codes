@@ -41,15 +41,7 @@ START_TEST(test_addbinary)
     Bin32 b2 = {{0x00,0x00,0x16,0x2e}};
     Bin32 bRet = {{0x00,0x00,0x00,0x00}};
     bin32_add(&b1, &b2, &bRet);
-
-    char szBin32a[33] = {0};
-    char szBin32b[33] = {0};
-    bin322bstr(&b1, szBin32a, 32);
-    bin322bstr(&b2, szBin32b, 32);
     bin322bstr(&bRet, szRet, 32);
-    printf(" b1:%s\n", szBin32a);
-    printf(" b2:%s\n", szBin32b);
-    printf("add:%s\n", szRet);
 
     ck_assert_msg(strcmp(szRet, "00000000000000000001101100000000") == 0, "bin32 add result is wrong");
 }
@@ -81,6 +73,13 @@ START_TEST(test_bin_sub)
     bin_init_bstr(&bin2, szB2, strlen(szB2));
     bin_sub(&bin1, &bin2, &binRet);
     bin2bstr(&binRet, szRet, 32);
+    ck_assert_msg(strcmp(szRet, "00000000000000000000000000001101") == 0, "sub result is wrong");
+
+    Bin32 b1 = {{0x00,0x00,0x00,0x38}};
+    Bin32 b2 = {{0x00,0x00,0x00,0x2b}};
+    Bin32 br = {{0x00,0x00,0x00,0x00}};
+    bin32_sub(&b1, &b2, &br);
+    bin322bstr(&br, szRet, 32);
     ck_assert_msg(strcmp(szRet, "00000000000000000000000000001101") == 0, "sub result is wrong");
 }
 END_TEST

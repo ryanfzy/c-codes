@@ -490,6 +490,19 @@ void _bin_get_2cmplmnt(Bin *pTo, Bin *pFrom)
     }
 }
 
+void bin32_sub(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet)
+{
+    if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
+    {
+        Bin32 binCmplmnt;
+        Bin32 bin2Cmplmnt = {{0x00,0x00,0x00,0x00}};
+        for (int i = 0; i < CHAR_NUM; i++)
+            binCmplmnt.cBin[i] = ~(pB2->cBin[i]);
+        bin32_add(&binCmplmnt, &(BIN32S[1]), &bin2Cmplmnt);
+        bin32_add(pB1, &bin2Cmplmnt, pBRet);
+    }
+}
+
 void _bin_sub(Bin *pB1, Bin *pB2, Bin *pBRet)
 {
     // here use 2's complement method
