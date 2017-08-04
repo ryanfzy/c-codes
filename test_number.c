@@ -18,6 +18,7 @@ END_TEST
 
 START_TEST(test_addbinary)
 {
+    /*
     char *szB1 = "10011010010";
     char *szB2 = "1011000101110";
     char szRet[33] = {0};
@@ -36,7 +37,9 @@ START_TEST(test_addbinary)
     bin_add(&bin1, &bin2, &binRet);
     bin2bstr(&binRet, szRet, 32);
     ck_assert_msg(strcmp(szRet, "00000000000000000000000000000011") == 0, "add result is wrong");
+    */
 
+    char szRet[33] = {0};
     Bin32 b1 = {{0x00,0x00,0x04,0xd2}};
     Bin32 b2 = {{0x00,0x00,0x16,0x2e}};
     Bin32 bRet = {{0x00,0x00,0x00,0x00}};
@@ -49,6 +52,7 @@ END_TEST
 
 START_TEST(test_bin_mul)
 {
+    /*
     char *szB1 = "1111011";
     char *szB2 = "1101";
     char szRet[33] = {0};
@@ -59,7 +63,9 @@ START_TEST(test_bin_mul)
     bin_mul(&bin1, &bin2, &binRet);
     bin2bstr(&binRet, szRet, 32);
     ck_assert_msg(strcmp(szRet, "00000000000000000000011000111111") == 0, "mul result is wrong");
+    */
 
+    char szRet[33] = {0};
     Bin32 b1 = {{0x00,0x00,0x00,0x7b}};
     Bin32 b2 = {{0x00,0x00,0x00,0x0d}};
     Bin32 br = {{0x00,0x00,0x00,0x00}};
@@ -71,6 +77,7 @@ END_TEST
 
 START_TEST(test_bin_sub)
 {
+    /*
     char *szB1 = "00111000";
     char *szB2 = "00101011";
     char szRet[33] = {0};
@@ -81,7 +88,9 @@ START_TEST(test_bin_sub)
     bin_sub(&bin1, &bin2, &binRet);
     bin2bstr(&binRet, szRet, 32);
     ck_assert_msg(strcmp(szRet, "00000000000000000000000000001101") == 0, "sub result is wrong");
+    */
 
+    char szRet[33] = {0};
     Bin32 b1 = {{0x00,0x00,0x00,0x38}};
     Bin32 b2 = {{0x00,0x00,0x00,0x2b}};
     Bin32 br = {{0x00,0x00,0x00,0x00}};
@@ -93,6 +102,7 @@ END_TEST
 
 START_TEST(test_bin_div)
 {
+    /*
     char *szB1 = "11000111111";
     char *szB2 = "1111011";
     char szRet[33] = {0};
@@ -102,6 +112,15 @@ START_TEST(test_bin_div)
     bin_init_bstr(&bin2, szB2, strlen(szB2));
     bin_div(&bin1, &bin2, &binRet);
     bin2bstr(&binRet, szRet, 32);
+    ck_assert_msg(strcmp(szRet, "00000000000000000000000000001101") == 0, "div result is wrong");
+    */
+
+    char szRet[33] = {0};
+    Bin32 b1 = {{0x00,0x00,0x06,0x3f}};
+    Bin32 b2 = {{0x00,0x00,0x00,0x7b}};
+    Bin32 br = {{0x00,0x00,0x00,0x00}};
+    bin32_div(&b1, &b2, &br);
+    bin322bstr(&br, szRet, 32);
     ck_assert_msg(strcmp(szRet, "00000000000000000000000000001101") == 0, "div result is wrong");
 }
 END_TEST

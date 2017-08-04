@@ -361,7 +361,10 @@ void bin32_add(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet)
                 }
                 else
                     chCur = (chCarry == 0x01) ? 0x00 : 0x01;
-                pBRet->cBin[i] |= (chCur << j);
+                if (chCur)
+                    pBRet->cBin[i] |= (chCur << j);
+                else
+                    pBRet->cBin[i] &= ~(1 << j);
             }
         }
     }
@@ -424,8 +427,6 @@ void bin32_mul(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet)
                 if (pB2->cBin[i] & iMsk)
                 {
                     Bin32 lastRet = *pBRet;
-                    for (int k = 0; k < CHAR_NUM; k++)
-                        pBRet->cBin[k] = 0x00;
                     bin32_add(&lastRet, pB1, pBRet);
                 }
                 bin32_lshift(pB1, 1);
@@ -458,6 +459,41 @@ bool bin_eq(Bin *pB1, Bin *pB2)
         return true;
     }
     return false;
+}
+
+bool bin32_eq(Bin32 *pB1, Bin32 *pB2)
+{
+    for (int i = 0; i < CHAR_NUM; i++)
+    {
+        if (pB1->cBin[i] != pB2->cBin[i])
+            return false;
+    }
+    return true;
+}
+
+void bin32_div(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet)
+{
+    if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
+    {
+        int iIndex = BIN_LEN-1;
+        Bin32 bin1 = *pB1;
+        while (!bin32_eq(&bin1, pB2))
+        {
+            if (bin1.cBin[CHAR_NUM-1] & 1)
+            {
+                Bin32 binRet = {{0x00,0x00,0x00,0x00}};
+                bin32_sub(&bin1, pB2, &binRet);
+                bin1 = binRet;
+                pBRet->cBin[iIndex/CHAR_BITS] |= 1 << (CHAR_BITS - (iIndex % CHAR_BITS) - 1);
+            }
+            else
+            {
+                iIndex = iIndex-1;
+                bin32_rshift(&bin1, 1);
+            }
+        }
+        pBRet->cBin[iIndex/CHAR_BITS] |= 1 << (CHAR_BITS - (iIndex % CHAR_BITS) - 1);
+    }
 }
 
 void _bin_div(Bin *pB1, Bin *pB2, Bin *pBRet)
