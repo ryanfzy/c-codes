@@ -16,117 +16,67 @@ START_TEST(test_int2str)
 }
 END_TEST
 
-START_TEST(test_addbinary)
+START_TEST(test_bin_add)
 {
-    /*
-    char *szB1 = "10011010010";
-    char *szB2 = "1011000101110";
     char szRet[33] = {0};
+    Bin b1 = {{0x00,0x00,0x04,0xd2}}; //10011010010
+    Bin b2 = {{0x00,0x00,0x16,0x2e}}; //1011000101110
+    Bin bRet = {{0x00,0x00,0x00,0x00}};
+    bin_add(&b1, &b2, &bRet);
+    bin2bstr(&bRet, szRet, 32);
 
-    Bin bin1, bin2, binRet;
-    bin_init_bstr(&bin1, szB1, strlen(szB1));
-    bin_init_bstr(&bin2, szB2, strlen(szB2));
-    bin_add(&bin1, &bin2, &binRet);
-    bin2bstr(&binRet, szRet, 32);
-    ck_assert_msg(strcmp(szRet, "00000000000000000001101100000000") == 0, "add result is wrong");
-
-    szB1 = "11";
-    szB2 = "00";
-    bin_init_bstr(&bin1, szB1, strlen(szB1));
-    bin_init_bstr(&bin2, szB2, strlen(szB2));
-    bin_add(&bin1, &bin2, &binRet);
-    bin2bstr(&binRet, szRet, 32);
-    ck_assert_msg(strcmp(szRet, "00000000000000000000000000000011") == 0, "add result is wrong");
-    */
-
-    char szRet[33] = {0};
-    Bin32 b1 = {{0x00,0x00,0x04,0xd2}};
-    Bin32 b2 = {{0x00,0x00,0x16,0x2e}};
-    Bin32 bRet = {{0x00,0x00,0x00,0x00}};
-    bin32_add(&b1, &b2, &bRet);
-    bin322bstr(&bRet, szRet, 32);
-
-    ck_assert_msg(strcmp(szRet, "00000000000000000001101100000000") == 0, "bin32 add result is wrong");
+    ck_assert_msg(strcmp(szRet, "00000000000000000001101100000000") == 0, "bin add result is wrong");
 }
 END_TEST
 
 START_TEST(test_bin_mul)
 {
-    /*
-    char *szB1 = "1111011";
-    char *szB2 = "1101";
     char szRet[33] = {0};
-
-    Bin bin1, bin2, binRet;
-    bin_init_bstr(&bin1, szB1, strlen(szB1));
-    bin_init_bstr(&bin2, szB2, strlen(szB2));
-    bin_mul(&bin1, &bin2, &binRet);
-    bin2bstr(&binRet, szRet, 32);
-    ck_assert_msg(strcmp(szRet, "00000000000000000000011000111111") == 0, "mul result is wrong");
-    */
-
-    char szRet[33] = {0};
-    Bin32 b1 = {{0x00,0x00,0x00,0x7b}};
-    Bin32 b2 = {{0x00,0x00,0x00,0x0d}};
-    Bin32 br = {{0x00,0x00,0x00,0x00}};
-    bin32_mul(&b1, &b2, &br);
-    bin322bstr(&br, szRet, 32);
+    Bin b1 = {{0x00,0x00,0x00,0x7b}}; //1111011
+    Bin b2 = {{0x00,0x00,0x00,0x0d}}; //1101
+    Bin br = {{0x00,0x00,0x00,0x00}};
+    bin_mul(&b1, &b2, &br);
+    bin2bstr(&br, szRet, 32);
     ck_assert_msg(strcmp(szRet, "00000000000000000000011000111111") == 0, "mul result is wrong");
 }
 END_TEST
 
 START_TEST(test_bin_sub)
 {
-    /*
-    char *szB1 = "00111000";
-    char *szB2 = "00101011";
     char szRet[33] = {0};
-
-    Bin bin1, bin2, binRet;
-    bin_init_bstr(&bin1, szB1, strlen(szB1));
-    bin_init_bstr(&bin2, szB2, strlen(szB2));
-    bin_sub(&bin1, &bin2, &binRet);
-    bin2bstr(&binRet, szRet, 32);
-    ck_assert_msg(strcmp(szRet, "00000000000000000000000000001101") == 0, "sub result is wrong");
-    */
-
-    char szRet[33] = {0};
-    Bin32 b1 = {{0x00,0x00,0x00,0x38}};
-    Bin32 b2 = {{0x00,0x00,0x00,0x2b}};
-    Bin32 br = {{0x00,0x00,0x00,0x00}};
-    bin32_sub(&b1, &b2, &br);
-    bin322bstr(&br, szRet, 32);
+    Bin b1 = {{0x00,0x00,0x00,0x38}}; //00111000
+    Bin b2 = {{0x00,0x00,0x00,0x2b}}; //00101011
+    Bin br = {{0x00,0x00,0x00,0x00}};
+    bin_sub(&b1, &b2, &br);
+    bin2bstr(&br, szRet, 32);
     ck_assert_msg(strcmp(szRet, "00000000000000000000000000001101") == 0, "sub result is wrong");
 }
 END_TEST
 
 START_TEST(test_bin_div)
 {
-    /*
-    char *szB1 = "11000111111";
-    char *szB2 = "1111011";
     char szRet[33] = {0};
-
-    Bin bin1, bin2, binRet;
-    bin_init_bstr(&bin1, szB1, strlen(szB1));
-    bin_init_bstr(&bin2, szB2, strlen(szB2));
-    bin_div(&bin1, &bin2, &binRet);
-    bin2bstr(&binRet, szRet, 32);
-    ck_assert_msg(strcmp(szRet, "00000000000000000000000000001101") == 0, "div result is wrong");
-    */
-
-    char szRet[33] = {0};
-    Bin32 b1 = {{0x00,0x00,0x06,0x3f}};
-    Bin32 b2 = {{0x00,0x00,0x00,0x7b}};
-    Bin32 br = {{0x00,0x00,0x00,0x00}};
-    bin32_div(&b1, &b2, &br);
-    bin322bstr(&br, szRet, 32);
+    Bin b1 = {{0x00,0x00,0x06,0x3f}}; //11000111111
+    Bin b2 = {{0x00,0x00,0x00,0x7b}}; //1111011
+    Bin br = {{0x00,0x00,0x00,0x00}};
+    bin_div(&b1, &b2, &br);
+    bin2bstr(&br, szRet, 32);
     ck_assert_msg(strcmp(szRet, "00000000000000000000000000001101") == 0, "div result is wrong");
 }
 END_TEST
 
 START_TEST(test_bin_int2bin)
 {
+    /*
+    char *szInt = "123";
+    char szRet[33] = {0};
+
+    Bin bin;
+    bin_init_istr(&bin, szInt, strlen(szInt));
+    bin2bstr(&bin, szRet, 32);
+    ck_assert_msg(strcmp(szRet, "00000000000000000000000001111011") == 0, "int to bin is wrong");
+    */
+
     char *szInt = "123";
     char szRet[33] = {0};
 
@@ -139,6 +89,7 @@ END_TEST
 
 START_TEST(test_bin_float2bin)
 {
+    /*
     char *szFloat = "10.7";
     char szRet[33] = {0};
     Bin binFloat;
@@ -153,36 +104,37 @@ START_TEST(test_bin_float2bin)
     bin_init_fstr(&binFloat, "0.004", 5);
     bin2bstr(&binFloat, szRet, 33);
     ck_assert_msg(strcmp(szRet, "00111011100000110001001001101111") == 0, "float 2 bin is wrong");
+    */
 }
 END_TEST
 
-START_TEST(test_bin32_init)
+START_TEST(test_bin_init)
 {
-    Bin32 bin32;
-    bin32_init(&bin32);
+    Bin bin;
+    bin_init(&bin);
     for (int i = 0; i < CHAR_NUM; i++)
-        ck_assert_int_eq(bin32.cBin[i], 0x00);
+        ck_assert_int_eq(bin.cBin[i], 0x00);
 }
 END_TEST
 
-START_TEST(test_bin32_lshift)
+START_TEST(test_bin_lshift)
 {
-    Bin32 bin32 = {{0xff,0xff,0xff,0xff}};
-    bin32_lshift(&bin32, 11);
-    ck_assert_int_eq(bin32.cBin[0], 0xff);
-    ck_assert_int_eq(bin32.cBin[1], 0xff);
-    ck_assert_int_eq(bin32.cBin[2], 0xf8);
-    ck_assert_int_eq(bin32.cBin[3], 0x00);
+    Bin bin = {{0xff,0xff,0xff,0xff}};
+    bin_lshift(&bin, 11);
+    ck_assert_int_eq(bin.cBin[0], 0xff);
+    ck_assert_int_eq(bin.cBin[1], 0xff);
+    ck_assert_int_eq(bin.cBin[2], 0xf8);
+    ck_assert_int_eq(bin.cBin[3], 0x00);
 
-    Bin32 bin2 = {{0xff,0xff,0xff,0xff}};
-    bin32_lshift(&bin2, 3);
+    Bin bin2 = {{0xff,0xff,0xff,0xff}};
+    bin_lshift(&bin2, 3);
     ck_assert_int_eq(bin2.cBin[0], 0xff);
     ck_assert_int_eq(bin2.cBin[1], 0xff);
     ck_assert_int_eq(bin2.cBin[2], 0xff);
     ck_assert_int_eq(bin2.cBin[3], 0xf8);
 
-    Bin32 bin3 = {{0xff,0xff,0xff,0xff}};
-    bin32_lshift(&bin3, 24);
+    Bin bin3 = {{0xff,0xff,0xff,0xff}};
+    bin_lshift(&bin3, 24);
     ck_assert_int_eq(bin3.cBin[0], 0xff);
     ck_assert_int_eq(bin3.cBin[1], 0x00);
     ck_assert_int_eq(bin3.cBin[2], 0x00);
@@ -190,42 +142,42 @@ START_TEST(test_bin32_lshift)
 }
 END_TEST
 
-START_TEST(test_bin32_2bstr)
+START_TEST(test_bin_2bstr)
 {
-    Bin32 bin32 = {{0xff,0xff,0xff,0xff}};
+    Bin bin = {{0xff,0xff,0xff,0xff}};
     char szBin[33] = {0};
-    bin322bstr(&bin32, szBin, 32);
-    ck_assert_msg(strcmp(szBin, "11111111111111111111111111111111") == 0, "bin32 to bstr is wrong");
+    bin2bstr(&bin, szBin, 32);
+    ck_assert_msg(strcmp(szBin, "11111111111111111111111111111111") == 0, "bin to bstr is wrong");
 
-    Bin32 bin2 = {{0x00,0xff,0x00,0xff}};
-    bin322bstr(&bin2, szBin, 32);
+    Bin bin2 = {{0x00,0xff,0x00,0xff}};
+    bin2bstr(&bin2, szBin, 32);
     ck_assert_msg(strcmp(szBin, "00000000111111110000000011111111") == 0, "bin2 to bstr is wrong");
 
-    Bin32 bin3 = {{0xff,0xff,0xff,0xff}};
-    bin32_lshift(&bin3, 11);
-    bin322bstr(&bin3, szBin, 32);
+    Bin bin3 = {{0xff,0xff,0xff,0xff}};
+    bin_lshift(&bin3, 11);
+    bin2bstr(&bin3, szBin, 32);
     ck_assert_msg(strcmp(szBin, "11111111111111111111100000000000") == 0, "bin3 to bstr is wrong");
 }
 END_TEST
 
-START_TEST(test_bin32_rshift)
+START_TEST(test_bin_rshift)
 {
-    Bin32 bin32 = {{0xff,0xff,0xff,0xff}};
-    bin32_rshift(&bin32, 11);
-    ck_assert_int_eq(bin32.cBin[0], 0x00);
-    ck_assert_int_eq(bin32.cBin[1], 0x1f);
-    ck_assert_int_eq(bin32.cBin[2], 0xff);
-    ck_assert_int_eq(bin32.cBin[3], 0xff);
+    Bin bin = {{0xff,0xff,0xff,0xff}};
+    bin_rshift(&bin, 11);
+    ck_assert_int_eq(bin.cBin[0], 0x00);
+    ck_assert_int_eq(bin.cBin[1], 0x1f);
+    ck_assert_int_eq(bin.cBin[2], 0xff);
+    ck_assert_int_eq(bin.cBin[3], 0xff);
 
-    Bin32 bin2 = {{0xff,0xff,0xff,0xff}};
-    bin32_rshift(&bin2, 3);
+    Bin bin2 = {{0xff,0xff,0xff,0xff}};
+    bin_rshift(&bin2, 3);
     ck_assert_int_eq(bin2.cBin[0], 0x1f);
     ck_assert_int_eq(bin2.cBin[1], 0xff);
     ck_assert_int_eq(bin2.cBin[2], 0xff);
     ck_assert_int_eq(bin2.cBin[3], 0xff);
 
-    Bin32 bin3 = {{0xff,0xff,0xff,0xff}};
-    bin32_rshift(&bin3, 24);
+    Bin bin3 = {{0xff,0xff,0xff,0xff}};
+    bin_rshift(&bin3, 24);
     ck_assert_int_eq(bin3.cBin[0], 0x00);
     ck_assert_int_eq(bin3.cBin[1], 0x00);
     ck_assert_int_eq(bin3.cBin[2], 0x00);
@@ -238,16 +190,16 @@ Suite* make_add_suit(void)
     Suite *s = suite_create("number");
     TCase *tc_stack = tcase_create("number");
     tcase_add_test(tc_stack, test_int2str);
-    tcase_add_test(tc_stack, test_addbinary);
+    tcase_add_test(tc_stack, test_bin_add);
     tcase_add_test(tc_stack, test_bin_mul);
     tcase_add_test(tc_stack, test_bin_sub);
     tcase_add_test(tc_stack, test_bin_div);
     tcase_add_test(tc_stack, test_bin_int2bin);
     tcase_add_test(tc_stack, test_bin_float2bin);
-    tcase_add_test(tc_stack, test_bin32_init);
-    tcase_add_test(tc_stack, test_bin32_lshift);
-    tcase_add_test(tc_stack, test_bin32_2bstr);
-    tcase_add_test(tc_stack, test_bin32_rshift);
+    tcase_add_test(tc_stack, test_bin_init);
+    tcase_add_test(tc_stack, test_bin_lshift);
+    tcase_add_test(tc_stack, test_bin_2bstr);
+    tcase_add_test(tc_stack, test_bin_rshift);
     suite_add_tcase(s, tc_stack);
     return s;
 }

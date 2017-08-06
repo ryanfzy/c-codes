@@ -12,38 +12,19 @@
 typedef struct _bin32
 {
     unsigned char cBin[CHAR_NUM];
-} Bin32;
-
-typedef struct _binary
-{
-    char cBin[BIN_LEN];
 } Bin;
 
-void bin32_copy(Bin32 *pBTo, Bin32 *pBFrom);
-bool bin32_init(Bin32 *pBin);
-void bin32_lshift(Bin32 *pBin, int iShift);
-void bin32_rshift(Bin32 *pBin, int iShift);
-void bin322bstr(Bin32 *pBin, char *szStr, size_t iLen);
-bool bin32_eq(Bin32 *pB1, Bin32 *pB2);
-
-void bin32_add(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet);
-void bin32_sub(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet);
-void bin32_mul(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet);
-void bin32_div(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet);
-
-bool bin_init_istr(Bin *pBin, char *szInt, size_t iLen);
-bool bin_init_bstr(Bin *pBin, char *szBin, size_t iLen);
-bool bin_init_fstr(Bin *pBin, char *szFloat, size_t iLen);
-
-void bin2bstr(Bin *pBin, char *szBin, size_t iLen);
-
-void bin_add(Bin *pB1, Bin *pB2, Bin *pBRet);
-void bin_mul(Bin *pB1, Bin *pB2, Bin *pBRet);
-void bin_sub(Bin *pB1, Bin *pB2, Bin *pBRet);
-void bin_div(Bin *pB1, Bin *pB2, Bin *pBRet);
-bool bin_eq(Bin *pB1, Bin *pB2);
-
+void bin_copy(Bin *pBTo, Bin *pBFrom);
+bool bin_init(Bin *pBin);
 void bin_lshift(Bin *pBin, int iShift);
 void bin_rshift(Bin *pBin, int iShift);
+void bin2bstr(Bin *pBin, char *szStr, size_t iLen);
+bool bin_eq(Bin *pB1, Bin *pB2);
+bool bin_init_istr(Bin *pBin, char *szInt, size_t iLen);
+
+void bin_add(Bin *pB1, Bin *pB2, Bin *pBRet);
+void bin_sub(Bin *pB1, Bin *pB2, Bin *pBRet);
+void bin_mul(Bin *pB1, Bin *pB2, Bin *pBRet);
+void bin_div(Bin *pB1, Bin *pB2, Bin *pBRet);
 
 #endif
