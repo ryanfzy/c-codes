@@ -1,7 +1,8 @@
 #include <string.h>
 #include "binary.h"
 
-#define BIN_LEN 32
+//#define BIN_LEN 32
+#define BIN_LEN 256
 #define CHAR_BITS 8
 #define CHAR_NUM BIN_LEN/CHAR_BITS
 
@@ -27,10 +28,19 @@ char _x2ch(char ch)
     return ch;
 }
 
+char _ch2x(char ch)
+{
+    if (ch >= 0 && ch <= 9)
+        return ch + '0';
+    else if (ch >= 10 && ch <= 16)
+        return ch - 10 + 'a';
+    return ch;
+}
+
 void _bin_create_x(const char *pstr, unsigned int isize, Bin32 *pbin)
 {
     int inext = isize;
-    for (int i = 3; i >= 0 && inext >= 0; i--)
+    for (int i = CHAR_NUM-1; i >= 0 && inext >= 0; i--)
     {
         char ch1 = _x2ch((--inext >= 0) ? pstr[inext] : 0);
         char ch2 = _x2ch((--inext >= 0) ? pstr[inext] : 0);
@@ -42,7 +52,7 @@ Bin bin_create(const char *pstr, unsigned int isize)
 {
     if (pstr != NULL)
     {
-        Bin32 *pbin = malloc(sizeof(Bin32*));
+        Bin32 *pbin = malloc(sizeof(Bin32));
         bin_init(pbin);
         if (pstr[0] == 'x')
             _bin_create_x(pstr+1, isize-1, pbin);
@@ -57,6 +67,7 @@ void bin_free(Bin bin)
     free(pbin);
 }
 
+/*
 static Bin32 BINS[11] =
 {
     {{0x00,0x00,0x00,0x00}},
@@ -71,6 +82,7 @@ static Bin32 BINS[11] =
     {{0x00,0x00,0x00,0x09}},
     {{0x00,0x00,0x00,0x0a}},
 };
+*/
 
 void bin_copy(Bin32 *pBTo, Bin32 *pBFrom)
 {
@@ -82,7 +94,8 @@ bool bin_init(Bin32 *pBin32)
 {
     if (pBin32 != NULL)
     {
-        *pBin32 = BINS[0];
+        for (int i = 0; i < CHAR_NUM; i++)
+            pBin32->cBin[i] = 0;
         return true;
     }
     return false;
@@ -109,6 +122,7 @@ void bin_lshift(Bin32 *pBin32, int iShift)
     }
 }
 
+/*
 bool bin_init_istr(Bin32 *pBin32, char *szStr, size_t iLen)
 {
     if (pBin32 != NULL && szStr != NULL && iLen > 0)
@@ -133,6 +147,7 @@ bool bin_init_istr(Bin32 *pBin32, char *szStr, size_t iLen)
     }
     return false;
 }
+*/
 
 void bin_rshift(Bin32 *pBin32, int iShift)
 {
@@ -244,14 +259,16 @@ void bin_div2(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet)
 {
     if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
     {
+        Bin32 *pZero = (Bin32*)bin_create("x0", 2);
         int iIndex = BIN_LEN-1;
         Bin32 bin1 = *pB1;
-        while (!bin_eq(&bin1, &(BINS[0])))
+        while (!bin_eq(&bin1, pZero))
         {
             int iBitOffset = CHAR_BITS - (iIndex % CHAR_BITS) - 1;
             if (bin1.cBin[CHAR_NUM-1] & 1)
             {
-                Bin32 binRet = {{0x00,0x00,0x00,0x00}};
+                Bin32 binRet;
+                bin_init(&binRet);
                 bin_sub2(&bin1, pB2, &binRet);
                 bin1 = binRet;
                 pBRet->cBin[iIndex/CHAR_BITS] |= 1 << iBitOffset;
@@ -262,6 +279,7 @@ void bin_div2(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet)
                 bin_rshift(&bin1, 1);
             }
         }
+        bin_free((Bin)pZero);
     }
 }
 
@@ -278,12 +296,15 @@ void bin_sub2(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet)
 {
     if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
     {
+        Bin32* pOne = (Bin32*)bin_create("x1", 2);
         Bin32 binCmplmnt;
-        Bin32 bin2Cmplmnt = {{0x00,0x00,0x00,0x00}};
+        Bin32 bin2Cmplmnt;
+        bin_init(&binCmplmnt);
         for (int i = 0; i < CHAR_NUM; i++)
             binCmplmnt.cBin[i] = ~(pB2->cBin[i]);
-        bin_add2(&binCmplmnt, &(BINS[1]), &bin2Cmplmnt);
+        bin_add2(&binCmplmnt, pOne, &bin2Cmplmnt);
         bin_add2(pB1, &bin2Cmplmnt, pBRet);
+        bin_free((Bin)pOne);
     }
 }
 
@@ -317,6 +338,22 @@ void bin2bstr(Bin bin, char *szStr, size_t iLen)
         }
     }
     _bin_reverse_str(szStr, iLen < BIN_LEN ? iLen : BIN_LEN);
+}
+
+void bin2xstr(Bin bin, char *szStr, size_t iLen)
+{
+    Bin32 *pbin = (Bin32*)bin;
+    if (pbin != NULL && szStr != NULL && iLen > 0)
+    {
+        for (int i = CHAR_NUM-1, j = 0; i >= 0 && j < iLen; i--, j+=2)
+        {
+            char ch1 = _ch2x(pbin->cBin[i] >> 4);
+            char ch2 = _ch2x(pbin->cBin[i] & 0x0f);
+            szStr[j] = ch2;
+            szStr[j+1] = ch1;
+        }
+        _bin_reverse_str(szStr, iLen < BIN_LEN ? iLen : BIN_LEN);
+    }
 }
 
 /*
