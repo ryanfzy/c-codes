@@ -19,71 +19,56 @@ END_TEST
 START_TEST(test_bin_add)
 {
     char szRet[33] = {0};
-    Bin b1 = {{0x00,0x00,0x04,0xd2}}; //10011010010
-    Bin b2 = {{0x00,0x00,0x16,0x2e}}; //1011000101110
-    Bin bRet = {{0x00,0x00,0x00,0x00}};
-    bin_add(&b1, &b2, &bRet);
-    bin2bstr(&bRet, szRet, 32);
-
+    Bin b1 = bin_create("x4d2", 4); // 1234
+    Bin b2 = bin_create("x162e", 5); // 5678
+    Bin ret = bin_add(b1, b2);
+    bin2bstr(ret, szRet, 32);
     ck_assert_msg(strcmp(szRet, "00000000000000000001101100000000") == 0, "bin add result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(ret);
 }
 END_TEST
 
 START_TEST(test_bin_mul)
 {
     char szRet[33] = {0};
-    Bin b1 = {{0x00,0x00,0x00,0x7b}}; //1111011
-    Bin b2 = {{0x00,0x00,0x00,0x0d}}; //1101
-    Bin br = {{0x00,0x00,0x00,0x00}};
-    bin_mul(&b1, &b2, &br);
-    bin2bstr(&br, szRet, 32);
+    Bin b1 = bin_create("x7b", 3);  // 123
+    Bin b2 = bin_create("xd", 2);   // 13
+    Bin br = bin_mul(b1, b2);
+    bin2bstr(br, szRet, 32);
     ck_assert_msg(strcmp(szRet, "00000000000000000000011000111111") == 0, "mul result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
 }
 END_TEST
 
 START_TEST(test_bin_sub)
 {
     char szRet[33] = {0};
-    Bin b1 = {{0x00,0x00,0x00,0x38}}; //00111000
-    Bin b2 = {{0x00,0x00,0x00,0x2b}}; //00101011
-    Bin br = {{0x00,0x00,0x00,0x00}};
-    bin_sub(&b1, &b2, &br);
-    bin2bstr(&br, szRet, 32);
+    Bin b1 = bin_create("x38", 3);  // 56
+    Bin b2 = bin_create("x2b", 3);  // 43
+    Bin br = bin_sub(b1, b2);
+    bin2bstr(br, szRet, 32);
     ck_assert_msg(strcmp(szRet, "00000000000000000000000000001101") == 0, "sub result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
 }
 END_TEST
 
 START_TEST(test_bin_div)
 {
     char szRet[33] = {0};
-    Bin b1 = {{0x00,0x00,0x06,0x3f}}; //11000111111
-    Bin b2 = {{0x00,0x00,0x00,0x7b}}; //1111011
-    Bin br = {{0x00,0x00,0x00,0x00}};
-    bin_div(&b1, &b2, &br);
-    bin2bstr(&br, szRet, 32);
+    Bin b1 = bin_create("x63f", 4);  // 1599
+    Bin b2 = bin_create("x7b", 3);   // 123
+    Bin br = bin_div(b1, b2);
+    bin2bstr(br, szRet, 32);
     ck_assert_msg(strcmp(szRet, "00000000000000000000000000001101") == 0, "div result is wrong");
-}
-END_TEST
-
-START_TEST(test_bin_int2bin)
-{
-    /*
-    char *szInt = "123";
-    char szRet[33] = {0};
-
-    Bin bin;
-    bin_init_istr(&bin, szInt, strlen(szInt));
-    bin2bstr(&bin, szRet, 32);
-    ck_assert_msg(strcmp(szRet, "00000000000000000000000001111011") == 0, "int to bin is wrong");
-    */
-
-    char *szInt = "123";
-    char szRet[33] = {0};
-
-    Bin bin;
-    bin_init_istr(&bin, szInt, strlen(szInt));
-    bin2bstr(&bin, szRet, 32);
-    ck_assert_msg(strcmp(szRet, "00000000000000000000000001111011") == 0, "int to bin is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
 }
 END_TEST
 
@@ -108,15 +93,7 @@ START_TEST(test_bin_float2bin)
 }
 END_TEST
 
-START_TEST(test_bin_init)
-{
-    Bin bin;
-    bin_init(&bin);
-    for (int i = 0; i < CHAR_NUM; i++)
-        ck_assert_int_eq(bin.cBin[i], 0x00);
-}
-END_TEST
-
+/*
 START_TEST(test_bin_lshift)
 {
     Bin bin = {{0xff,0xff,0xff,0xff}};
@@ -184,6 +161,7 @@ START_TEST(test_bin_rshift)
     ck_assert_int_eq(bin3.cBin[3], 0xff);
 }
 END_TEST
+*/
 
 Suite* make_add_suit(void)
 {
@@ -194,12 +172,10 @@ Suite* make_add_suit(void)
     tcase_add_test(tc_stack, test_bin_mul);
     tcase_add_test(tc_stack, test_bin_sub);
     tcase_add_test(tc_stack, test_bin_div);
-    tcase_add_test(tc_stack, test_bin_int2bin);
     tcase_add_test(tc_stack, test_bin_float2bin);
-    tcase_add_test(tc_stack, test_bin_init);
-    tcase_add_test(tc_stack, test_bin_lshift);
-    tcase_add_test(tc_stack, test_bin_2bstr);
-    tcase_add_test(tc_stack, test_bin_rshift);
+    //tcase_add_test(tc_stack, test_bin_lshift);
+    //tcase_add_test(tc_stack, test_bin_2bstr);
+    //tcase_add_test(tc_stack, test_bin_rshift);
     suite_add_tcase(s, tc_stack);
     return s;
 }
