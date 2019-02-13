@@ -18,6 +18,8 @@ void bin_add2(Bin32*, Bin32*, Bin32*);
 void bin_mul2(Bin32*, Bin32*, Bin32*);
 void bin_sub2(Bin32*, Bin32*, Bin32*);
 void bin_div2(Bin32*, Bin32*, Bin32*);
+void bin_printb(Bin32*);
+void bin_printx(Bin32*);
 
 char _x2ch(char ch)
 {
@@ -236,14 +238,47 @@ void bin_mul2(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet)
     }
 }
 
-bool bin_eq(Bin32 *pB1, Bin32 *pB2)
+int bin_eq(Bin32 *pB1, Bin32 *pB2)
 {
+    //return memcmp(pB1, pB2, sizeof(Bin32)) == 0;
     for (int i = 0; i < CHAR_NUM; i++)
     {
-        if (pB1->cBin[i] != pB2->cBin[i])
-            return false;
+        if (pB1->cBin[i] > pB2->cBin[i])
+            return 1;
+        else if (pB1->cBin[i] < pB2->cBin[i])
+            return -1;
     }
-    return true;
+    return 0;
+}
+
+int _bin_get_startIndex(Bin32 *pa)
+{
+    if (pa != NULL)
+    {
+        for (int i = 0; i < CHAR_NUM; i++)
+        {
+            if (pa->cBin[i] > 0)
+            {
+                for (int j = 7; j >= 0; j--)
+                {
+                    if (pa->cBin[i] & (1 << j))
+                        return i * CHAR_BITS + 8-j-1;
+                }
+            }
+        }
+    }
+    return -1;
+}
+
+void _bin_align(Bin32 *pa, Bin32 *pb, Bin32 *pr)
+{
+    if (pa != NULL && pb != NULL && pr != NULL)
+    {
+        int ia = _bin_get_startIndex(pa);
+        int ib = _bin_get_startIndex(pb);
+        bin_copy(pr, pb);
+        bin_lshift(pr, ib - ia);
+    }
 }
 
 Bin bin_div(Bin a, Bin b)
@@ -259,27 +294,23 @@ void bin_div2(Bin32 *pB1, Bin32 *pB2, Bin32 *pBRet)
 {
     if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
     {
-        Bin32 *pZero = (Bin32*)bin_create("x0", 2);
-        int iIndex = BIN_LEN-1;
-        Bin32 bin1 = *pB1;
-        while (!bin_eq(&bin1, pZero))
+        Bin32 *paligned = (Bin32*)bin_create("x1", 2);
+        _bin_align(pB1, pB2, paligned);
+        Bin32 a = *pB1;
+        while (bin_eq(paligned, pB2) >= 0)
         {
-            int iBitOffset = CHAR_BITS - (iIndex % CHAR_BITS) - 1;
-            if (bin1.cBin[CHAR_NUM-1] & 1)
+            bin_lshift(pBRet, 1);
+            if (bin_eq(&a, paligned) >= 0)
             {
-                Bin32 binRet;
-                bin_init(&binRet);
-                bin_sub2(&bin1, pB2, &binRet);
-                bin1 = binRet;
-                pBRet->cBin[iIndex/CHAR_BITS] |= 1 << iBitOffset;
+                Bin32 bin;
+                bin_init(&bin);
+                bin_sub2(&a, paligned, &bin);
+                a = bin;
+                pBRet->cBin[CHAR_NUM-1] |= 0x01;
             }
-            else
-            {
-                iIndex = iIndex-1;
-                bin_rshift(&bin1, 1);
-            }
+            bin_rshift(paligned, 1);
         }
-        bin_free((Bin)pZero);
+        bin_free((Bin)paligned);
     }
 }
 
@@ -321,6 +352,26 @@ void _bin_reverse_str(char *szStr, size_t iLen)
             szStr[iIndexToSwap] = ch;
         }
     }
+}
+
+void bin_printb(Bin32 *pbin)
+{
+    char szStr[257] = {0};
+    bin2bstr((Bin)pbin, szStr, 256);
+    int i = 0;
+    for (; i < 257; i++)
+    {
+        if (szStr[i] == '1')
+            break;
+    }
+    printf("%10s\n", szStr+i);
+}
+
+void bin_printx(Bin32 *pa)
+{
+    char szStr[65] = {0};
+    bin2xstr((Bin)pa, szStr, 64);
+    printf("%s\n", szStr);
 }
 
 void bin2bstr(Bin bin, char *szStr, size_t iLen)

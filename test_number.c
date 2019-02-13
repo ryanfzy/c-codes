@@ -118,19 +118,15 @@ END_TEST
 
 START_TEST(test_bin_div_big)
 {
-    printf("Pass test_bin_div_big, because division of large numbers is very slow.\n");
-    /*
     char szRet[65] = {0};
-    Bin b1 = bin_create("x136ccc118300207d2e6cfe0022e5d56a89116ec6de5d5f3ff4", 51);  // 1599
-    Bin b2 = bin_create("x18ee90ff6c373e0ee4e3f0ad2", 26);   // 123
+    Bin b1 = bin_create("x136ccc118300207d2e6cfe0022e5d56a89116ec6de5d5f3ff4", 51);  // 123456789012345678901234567890 * 987654321098765432109876543210
+    Bin b2 = bin_create("x18ee90ff6c373e0ee4e3f0ad2", 26);   // 123456789012345678901234567890
     Bin br = bin_div(b1, b2);
     bin2xstr(br, szRet, 64);
-    printf("%s\n", szRet);
-    ck_assert_msg(strcmp(szRet, "000000000000000000000000000000000000000000000000000000000000000d") == 0, "sub result is wrong");
+    ck_assert_msg(strcmp(szRet, "000000000000000000000000000000000000000c7748819dffb62438d1c67eea") == 0, "sub result is wrong");
     bin_free(b1);
     bin_free(b2);
     bin_free(br);
-    */
 }
 END_TEST
 
