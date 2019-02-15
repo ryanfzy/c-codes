@@ -20,6 +20,13 @@
 #define Q0(x) (S7(x)^S18(x)^R3(x))
 #define Q1(x) (S17(x)^S19(x)^R10(x))
 
+#define HASH_LEN 32
+
+typedef struct
+{
+    unsigned char X[HASH_LEN];
+} _hash;
+
 static long K[64] = 
 {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -31,6 +38,8 @@ static long K[64] =
     0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
     0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
 };
+
+void sha256(char *pInput, unsigned int iInputLength, _hash *p_hash);
 
 static void printstr(char *pCharStr, unsigned int isize)
 {
@@ -92,9 +101,47 @@ void long2char4(unsigned long lvalue, unsigned char *pvalue)
         pvalue[i] = lvalue >> j;
 }
 
-void sha256(char *pInput, unsigned int iInputLength, Hash *pHash)
+Hash sha_create(char *pinput, unsigned int length)
 {
-    printf("length:%d\n",iInputLength);
+    _hash *phash = malloc(sizeof(_hash));
+    sha256(pinput, length, phash);
+    return (Hash)phash;
+}
+
+void sha_free(Hash hash)
+{
+    _hash *phash = (_hash*)hash;
+    if (phash != NULL)
+        free(phash);
+}
+
+char _ch2x(char ch)
+{
+    if (ch >= 0 && ch <= 9)
+        return ch + '0';
+    else if (ch >= 10 && ch <= 16)
+        return ch - 10 + 'a';
+    return ch;
+}
+
+void sha2xstr(Hash hash, char *str, size_t len)
+{
+    _hash *phash = (_hash*)hash;
+    if (phash != NULL)
+    {
+        for (int i = 0, j = 0; i < HASH_LEN && j < len; i++, j+=2)
+        {
+            char x1 = _ch2x(phash->X[i] >> 4);
+            char x2 = _ch2x(phash->X[i] & 0x0f);
+            str[j] = x1;
+            str[j+1] = x2;
+        }
+    }
+}
+
+void sha256(char *pInput, unsigned int iInputLength, _hash *p_hash)
+{
+    //printf("length:%d\n",iInputLength);
     unsigned long h1 = 0x6a09e667;
     unsigned long h2 = 0xbb67ae85;
     unsigned long h3 = 0x3c6ef372;
@@ -103,15 +150,15 @@ void sha256(char *pInput, unsigned int iInputLength, Hash *pHash)
     unsigned long h6 = 0x9b05688c;
     unsigned long h7 = 0x1f83d9ab;
     unsigned long h8 = 0x5be0cd19;
-    print8longs(h1, h2, h3, h4, h5, h6, h7, h8);
+    //print8longs(h1, h2, h3, h4, h5, h6, h7, h8);
 
     unsigned int isize = (iInputLength / 64 > 0) ? (iInputLength / 64 * 64 + 64) : 64;
     isize =  iInputLength % 64 >= 56 ? isize + 64 : isize;
-    printf("size:%d\n", isize);
+    //printf("size:%d\n", isize);
     unsigned long *pPreparedInput = (unsigned long*)malloc(isize);
     prepare_input(pPreparedInput, isize/4, pInput, iInputLength);
 
-    printstr((char*)pPreparedInput, isize);
+    //printstr((char*)pPreparedInput, isize);
 
     for (int i = 0; i < isize/4; i = i + 16)
     {
@@ -172,15 +219,15 @@ void sha256(char *pInput, unsigned int iInputLength, Hash *pHash)
         h7 += g;
         h8 += h;
     }
-    print8longs(h1, h2, h3, h4, h5, h6, h7, h8);
-    long2char4(h1, pHash->X);
-    long2char4(h2, pHash->X+4);
-    long2char4(h3, pHash->X+8);
-    long2char4(h4, pHash->X+12);
-    long2char4(h5, pHash->X+16);
-    long2char4(h6, pHash->X+20);
-    long2char4(h7, pHash->X+24);
-    long2char4(h8, pHash->X+28);
+    //print8longs(h1, h2, h3, h4, h5, h6, h7, h8);
+    long2char4(h1, p_hash->X);
+    long2char4(h2, p_hash->X+4);
+    long2char4(h3, p_hash->X+8);
+    long2char4(h4, p_hash->X+12);
+    long2char4(h5, p_hash->X+16);
+    long2char4(h6, p_hash->X+20);
+    long2char4(h7, p_hash->X+24);
+    long2char4(h8, p_hash->X+28);
 
     free(pPreparedInput);
 }

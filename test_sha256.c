@@ -5,41 +5,23 @@
 
 START_TEST(test_short)
 {
-    char input[] = "abc";
-    Hash hash = {{0}};
-    sha256(input, 3, &hash);
-    for (int i = 0; i < 32; i++)
-        printf("%02x", hash.X[i]);
-    printf("\n");
-    unsigned char expected[32] = {0xba, 0x78, 0x16, 0xbf, 0x8f, 0x01, 0xcf, 0xea, 0x41, 0x41, 0x40, 0xde, 0x5d, 0xae, 0x22, 0x23, 0xb0, 0x03, 0x61, 0xa3, 0x96, 0x17, 0x7a, 0x9c, 0xb4, 0x10, 0xff, 0x61, 0xf2, 0x00, 0x15, 0xad};
-    for (int i = 0; i < 32; i++)
-        printf("%02x", expected[i]);
-    printf("\n");
-    for (int i = 0; i < 32; i++)
-    {
-        if (hash.X[i] != expected[i])
-            ck_assert_msg(false, "wrong hash of \"abc\"");
-    }
+    Hash hash = sha_create("abc", 3);
+    char *exp = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+    char act[65] = {0};
+    sha2xstr(hash, act, 64);
+    ck_assert_msg(strcmp(act, exp) == 0, "short is wrong.");
+    sha_free(hash);
 }
 END_TEST
 
 START_TEST(test_long)
 {
-    char pInput[] = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
-    Hash hash = {{0}};
-    sha256(pInput, sizeof(pInput)-1, &hash);
-    for (int i = 0; i < 32; i++)
-        printf("%02x", hash.X[i]);
-    printf("\n");
-    unsigned char expected[32] = {0x24, 0x8d, 0x6a, 0x61, 0xd2, 0x06, 0x38, 0xb8, 0xe5, 0xc0, 0x26, 0x93, 0x0c, 0x3e, 0x60, 0x39, 0xa3, 0x3c, 0xe4, 0x59, 0x64, 0xff, 0x21, 0x67, 0xf6, 0xec, 0xed, 0xd4, 0x19, 0xdb, 0x06, 0xc1};
-    for (int i = 0; i < 32; i++)
-        printf("%02x", expected[i]);
-    printf("\n");
-    for (int i = 0; i < 32; i++)
-    {
-        if (hash.X[i] != expected[i])
-            ck_assert_msg(false, "wrong long hash");
-    }
+    Hash hash = sha_create("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", 56);
+    char *exp = "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1";
+    char act[65] = {0};
+    sha2xstr(hash, act, 64);
+    ck_assert_msg(strcmp(act, exp) == 0, "long is wrong.");
+    sha_free(hash);
 }
 END_TEST
 
