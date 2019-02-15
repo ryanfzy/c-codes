@@ -5,7 +5,7 @@
 
 START_TEST(test_short)
 {
-    Hash hash = sha_create("abc", 3);
+    Hash hash = sha_create("abc");
     char *exp = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
     char act[65] = {0};
     sha2xstr(hash, act, 64);
@@ -16,7 +16,7 @@ END_TEST
 
 START_TEST(test_long)
 {
-    Hash hash = sha_create("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", 56);
+    Hash hash = sha_create("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
     char *exp = "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1";
     char act[65] = {0};
     sha2xstr(hash, act, 64);

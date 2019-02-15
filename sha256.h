@@ -6,7 +6,8 @@
 
 typedef long Hash;
 
-Hash sha_create(char *pinput, unsigned int length);
+Hash sha_create(char *pinput);
+Hash sha_create2(char *pinput, unsigned int length);
 void sha_free(Hash hash);
 void sha2xstr(Hash hash, char *str, size_t len);
 

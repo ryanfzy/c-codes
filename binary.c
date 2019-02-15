@@ -50,7 +50,18 @@ void _bin_create_x(const char *pstr, unsigned int isize, _bin *pbin)
     }
 }
 
-Bin bin_create(const char *pstr, unsigned int isize)
+Bin bin_create(const char *pstr)
+{
+    if (pstr != NULL)
+    {
+        int len = 0;
+        for(; pstr[len] != '\0'; len++);
+        return bin_create2(pstr, len);
+    }
+    return 0;
+}
+
+Bin bin_create2(const char *pstr, unsigned int isize)
 {
     if (pstr != NULL)
     {
@@ -160,7 +171,7 @@ Bin bin_add(Bin a, Bin b)
 {
     _bin *pa = (_bin*)a;
     _bin *pb = (_bin*)b;
-    _bin *pr = (_bin*)bin_create("x0", 2);
+    _bin *pr = (_bin*)bin_create("x0");
     _bin_add(pa, pb, pr);
     return (Bin)pr;
 }
@@ -196,7 +207,7 @@ Bin bin_mul(Bin a, Bin b)
 {
     _bin *pa = (_bin*)a;
     _bin *pb = (_bin*)b;
-    _bin *pr = (_bin*)bin_create("x0", 2);
+    _bin *pr = (_bin*)bin_create("x0");
     _bin_mul(pa, pb, pr);
     return (Bin)pr;
 }
@@ -267,7 +278,7 @@ Bin bin_div(Bin a, Bin b)
 {
     _bin *pa = (_bin*)a;
     _bin *pb = (_bin*)b;
-    _bin *pr = (_bin*)bin_create("x0", 2);
+    _bin *pr = (_bin*)bin_create("x0");
     _bin_div(pa, pb, pr);
     return (Bin)pr;
 }
@@ -276,7 +287,7 @@ void _bin_div(_bin *pB1, _bin *pB2, _bin *pBRet)
 {
     if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
     {
-        _bin *paligned = (_bin*)bin_create("x0", 2);
+        _bin *paligned = (_bin*)bin_create("x0");
         _bin_align(pB1, pB2, paligned);
         _bin a = *pB1;
         while (bin_eq(paligned, pB2) >= 0)
@@ -300,7 +311,7 @@ Bin bin_sub(Bin a, Bin b)
 {
     _bin *pa = (_bin*)a;
     _bin *pb = (_bin*)b;
-    _bin *pr = (_bin*)bin_create("x0", 2);
+    _bin *pr = (_bin*)bin_create("x0");
     _bin_sub(pa, pb, pr);
     return (Bin)pr;
 }
@@ -309,7 +320,7 @@ void _bin_sub(_bin *pB1, _bin *pB2, _bin *pBRet)
 {
     if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
     {
-        _bin* pOne = (_bin*)bin_create("x1", 2);
+        _bin* pOne = (_bin*)bin_create("x1");
         _bin binCmplmnt;
         _bin bin2Cmplmnt;
         bin_init(&binCmplmnt);

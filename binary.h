@@ -7,7 +7,8 @@
 
 typedef long Bin;
 
-Bin bin_create(const char *pstr, unsigned int isize);
+Bin bin_create(const char *pstr);
+Bin bin_create2(const char *pstr, unsigned int isize);
 void bin_free(Bin pbin);
 
 void bin2bstr(Bin bin, char *szStr, size_t iLen);

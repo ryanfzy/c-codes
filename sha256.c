@@ -101,7 +101,18 @@ void long2char4(unsigned long lvalue, unsigned char *pvalue)
         pvalue[i] = lvalue >> j;
 }
 
-Hash sha_create(char *pinput, unsigned int length)
+Hash sha_create(char *pinput)
+{
+    if (pinput != NULL)
+    {
+        int len = 0;
+        for(; pinput[len] != '\0'; len++);
+        return sha_create2(pinput, len);
+    }
+    return 0;
+}
+
+Hash sha_create2(char *pinput, unsigned int length)
 {
     _hash *phash = malloc(sizeof(_hash));
     sha256(pinput, length, phash);
