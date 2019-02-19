@@ -18,5 +18,12 @@ Bin bin_add(Bin a, Bin b);
 Bin bin_sub(Bin a, Bin b);
 Bin bin_mul(Bin a, Bin b);
 Bin bin_div(Bin a, Bin b);
+Bin bin_mod(Bin a, Bin b);
+
+void bin_add2(Bin a, Bin b, Bin *pr);
+void bin_sub2(Bin a, Bin b, Bin *pr);
+void bin_mul2(Bin a, Bin b, Bin *pr);
+void bin_div2(Bin a, Bin b, Bin *pr);
+void bin_mod2(Bin a, Bin b, Bin *pr);
 
 #endif

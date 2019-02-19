@@ -17,7 +17,7 @@ void bin_rshift(_bin*, int);
 void _bin_add(_bin*, _bin*, _bin*);
 void _bin_mul(_bin*, _bin*, _bin*);
 void _bin_sub(_bin*, _bin*, _bin*);
-void _bin_div(_bin*, _bin*, _bin*);
+void _bin_div(_bin*, _bin*, _bin*, _bin*);
 void bin_printb(_bin*);
 void bin_printx(_bin*);
 
@@ -169,17 +169,32 @@ void bin_rshift(_bin *pbin, int iShift)
 
 Bin bin_add(Bin a, Bin b)
 {
-    _bin *pa = (_bin*)a;
-    _bin *pb = (_bin*)b;
-    _bin *pr = (_bin*)bin_create("x0");
-    _bin_add(pa, pb, pr);
-    return (Bin)pr;
+    Bin r = 0;
+    bin_add2(a, b, &r);
+    return r;
 }
 
-void _bin_add(_bin *pB1, _bin *pB2, _bin *pBRet)
+void bin_add2(Bin a, Bin b, Bin *ppr)
 {
-    if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
+    _bin *pa = (_bin*)a;
+    _bin *pb = (_bin*)b;
+    _bin *pr = (_bin*)(*ppr);
+    if (pr == NULL)
     {
+        pr = (_bin*)bin_create("x0");
+        *ppr = (Bin)pr;
+    }
+    else
+        bin_init(pr);
+    _bin_add(pa, pb, pr);
+}
+
+void _bin_add(_bin *pa, _bin *pb, _bin *pr)
+{
+    if (pa != NULL && pb != NULL && pr != NULL)
+    {
+        _bin a = *pa;
+        _bin b = *pb;
         char chCarry = 0x00;
         for (int i = BIN_LEN - 1; i >= 0; i--)
         {
@@ -188,46 +203,61 @@ void _bin_add(_bin *pB1, _bin *pB2, _bin *pBRet)
 
             char chCur = 0x00;
             int iMsk = 1 << iBitOffset;
-            if ((pB1->cBin[iIndex] & iMsk) == (pB2->cBin[iIndex] & iMsk))
+            if ((a.cBin[iIndex] & iMsk) == (b.cBin[iIndex] & iMsk))
             {
                 chCur = chCarry;
-                chCarry = (pB1->cBin[iIndex] & iMsk) ? 0x01 : 0x00;
+                chCarry = (a.cBin[iIndex] & iMsk) ? 0x01 : 0x00;
             }
             else
                 chCur = (chCarry == 0x01) ? 0x00 : 0x01;
             if (chCur)
-                pBRet->cBin[iIndex] |= (chCur << iBitOffset);
+                pr->cBin[iIndex] |= (chCur << iBitOffset);
             else
-                pBRet->cBin[iIndex] &= ~(1 << iBitOffset);
+                pr->cBin[iIndex] &= ~(1 << iBitOffset);
         }
     }
 }
 
 Bin bin_mul(Bin a, Bin b)
 {
-    _bin *pa = (_bin*)a;
-    _bin *pb = (_bin*)b;
-    _bin *pr = (_bin*)bin_create("x0");
-    _bin_mul(pa, pb, pr);
-    return (Bin)pr;
+    Bin r = 0;
+    bin_mul2(a, b, &r);
+    return r;
 }
 
-void _bin_mul(_bin *pB1, _bin *pB2, _bin *pBRet)
+void bin_mul2(Bin a, Bin b, Bin *ppr)
 {
-    if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
+    _bin *pa = (_bin*)a;
+    _bin *pb = (_bin*)b;
+    _bin *pr = (_bin*)(*ppr);
+    if (pr == NULL)
     {
+        pr = (_bin*)bin_create("x0");
+        *ppr = (Bin)pr;
+    }
+    else
+        bin_init(pr);
+    _bin_mul(pa, pb, pr);
+}
+
+void _bin_mul(_bin *pa, _bin *pb, _bin *pr)
+{
+    if (pa != NULL && pb != NULL && pr != NULL)
+    {
+        _bin a = *pa;
+        _bin b = *pb;
         for (int i = BIN_LEN -1 ; i >= 0; i--)
         {
             int iIndex = i / CHAR_BITS;
             int iBitOffset = CHAR_BITS - (i % CHAR_BITS) - 1;
 
             int iMsk = 1 << iBitOffset;
-            if (pB2->cBin[iIndex] & iMsk)
+            if (b.cBin[iIndex] & iMsk)
             {
-                _bin lastRet = *pBRet;
-                _bin_add(&lastRet, pB1, pBRet);
+                _bin lastRet = *pr;
+                _bin_add(&lastRet, &a, pr);
             }
-            bin_lshift(pB1, 1);
+            bin_lshift(&a, 1);
         }
     }
 }
@@ -274,60 +304,115 @@ void _bin_align(_bin *pa, _bin *pb, _bin *pr)
     }
 }
 
-Bin bin_div(Bin a, Bin b)
+Bin bin_mod(Bin a, Bin b)
+{
+    Bin r = 0;
+    bin_mod2(a, b, &r);
+    return r;
+}
+
+void bin_mod2(Bin a, Bin b, Bin *ppm)
 {
     _bin *pa = (_bin*)a;
     _bin *pb = (_bin*)b;
-    _bin *pr = (_bin*)bin_create("x0");
-    _bin_div(pa, pb, pr);
-    return (Bin)pr;
+    _bin r;
+    bin_init(&r);
+    _bin *pm = (_bin*)(*ppm);
+    if (pm == NULL)
+    {
+        pm = (_bin*)bin_create("x0");
+        *ppm = (Bin)pm;
+    }
+    else
+        bin_init(pm);
+    _bin_div(pa, pb, &r, pm);
 }
 
-void _bin_div(_bin *pB1, _bin *pB2, _bin *pBRet)
+Bin bin_div(Bin a, Bin b)
 {
-    if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
+    Bin r = 0;
+    bin_div2(a, b, &r);
+    return r;
+}
+
+void bin_div2(Bin a, Bin b, Bin *ppr)
+{
+    _bin *pa = (_bin*)a;
+    _bin *pb = (_bin*)b;
+    _bin *pr = (_bin*)(*ppr);
+    if (pr == NULL)
     {
-        _bin *paligned = (_bin*)bin_create("x0");
-        _bin_align(pB1, pB2, paligned);
-        _bin a = *pB1;
-        while (bin_eq(paligned, pB2) >= 0)
+        pr = (_bin*)bin_create("x0");
+        *ppr = (Bin)pr;
+    }
+    else
+        bin_init(pr);
+    _bin_div(pa, pb, pr, NULL);
+}
+
+void _bin_div(_bin *pa, _bin *pb, _bin *pr, _bin *pm)
+{
+    if (pa != NULL && pb != NULL && pr != NULL)
+    {
+        _bin a = *pa;
+        _bin b = *pb;
+        _bin aligned;
+        bin_init(&aligned);
+        _bin_align(&a, &b, &aligned);
+        while (bin_eq(&aligned, &b) >= 0)
         {
-            bin_lshift(pBRet, 1);
-            if (bin_eq(&a, paligned) >= 0)
+            bin_lshift(pr, 1);
+            if (bin_eq(&a, &aligned) >= 0)
             {
                 _bin bin;
                 bin_init(&bin);
-                _bin_sub(&a, paligned, &bin);
+                _bin_sub(&a, &aligned, &bin);
                 a = bin;
-                pBRet->cBin[CHAR_NUM-1] |= 0x01;
+                pr->cBin[CHAR_NUM-1] |= 0x01;
             }
-            bin_rshift(paligned, 1);
+            bin_rshift(&aligned, 1);
         }
-        bin_free((Bin)paligned);
+        if (pm != NULL)
+            *pm = a; 
     }
 }
 
 Bin bin_sub(Bin a, Bin b)
 {
-    _bin *pa = (_bin*)a;
-    _bin *pb = (_bin*)b;
-    _bin *pr = (_bin*)bin_create("x0");
-    _bin_sub(pa, pb, pr);
-    return (Bin)pr;
+    Bin r = 0;
+    bin_sub2(a, b, &r);
+    return r;
 }
 
-void _bin_sub(_bin *pB1, _bin *pB2, _bin *pBRet)
+void bin_sub2(Bin a, Bin b, Bin *ppr)
 {
-    if (pB1 != NULL && pB2 != NULL && pBRet != NULL)
+    _bin *pa = (_bin*)a;
+    _bin *pb = (_bin*)b;
+    _bin *pr = (_bin*)(*ppr);
+    if (pr == NULL)
     {
+        pr = (_bin*)bin_create("x0");
+        *ppr = (Bin)pr;
+    }
+    else
+        bin_init(pr);
+    _bin_sub(pa, pb, pr);
+}
+
+void _bin_sub(_bin *pa, _bin *pb, _bin *pr)
+{
+    if (pa != NULL && pb != NULL && pr != NULL)
+    {
+        _bin a = *pa;
+        _bin b = *pb;
         _bin* pOne = (_bin*)bin_create("x1");
         _bin binCmplmnt;
         _bin bin2Cmplmnt;
         bin_init(&binCmplmnt);
         for (int i = 0; i < CHAR_NUM; i++)
-            binCmplmnt.cBin[i] = ~(pB2->cBin[i]);
+            binCmplmnt.cBin[i] = ~(b.cBin[i]);
         _bin_add(&binCmplmnt, pOne, &bin2Cmplmnt);
-        _bin_add(pB1, &bin2Cmplmnt, pBRet);
+        _bin_add(&a, &bin2Cmplmnt, pr);
         bin_free((Bin)pOne);
     }
 }

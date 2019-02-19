@@ -130,6 +130,34 @@ START_TEST(test_bin_div_big)
 }
 END_TEST
 
+START_TEST(test_bin_mod)
+{
+    char szRet[65] = {0};
+    Bin b1 = bin_create("x9ab5");  // 39605
+    Bin b2 = bin_create("x7b");    // 123
+    Bin br = bin_mod(b1, b2);
+    bin2xstr(br, szRet, 64);
+    ck_assert_msg(strcmp(szRet, "000000000000000000000000000000000000000000000000000000000000007a") == 0, "sub result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
+}
+END_TEST
+
+START_TEST(test_bin_mod_big)
+{
+    char szRet[65] = {0};
+    Bin b1 = bin_create("x136ccc118300207d2e6cfe002474be7a7fd4e2a7ccab9e4ac5");  // 123456789012345678901234567890 * 987654321098765432109876543210 + 123456789012345678901234567889
+    Bin b2 = bin_create("x18ee90ff6c373e0ee4e3f0ad2");   // 123456789012345678901234567890
+    Bin br = bin_mod(b1, b2);
+    bin2xstr(br, szRet, 64);
+    ck_assert_msg(strcmp(szRet, "00000000000000000000000000000000000000018ee90ff6c373e0ee4e3f0ad1") == 0, "sub result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
+}
+END_TEST
+
 /*
 START_TEST(test_bin_float2bin)
 {
@@ -232,6 +260,8 @@ Suite* make_add_suit(void)
     tcase_add_test(tc_stack, test_bin_sub_big);
     tcase_add_test(tc_stack, test_bin_div);
     tcase_add_test(tc_stack, test_bin_div_big);
+    tcase_add_test(tc_stack, test_bin_mod);
+    tcase_add_test(tc_stack, test_bin_mod_big);
     //tcase_add_test(tc_stack, test_bin_float2bin);
     //tcase_add_test(tc_stack, test_bin_lshift);
     //tcase_add_test(tc_stack, test_bin_2bstr);
