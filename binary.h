@@ -9,7 +9,10 @@ typedef long Bin;
 
 Bin bin_create(const char *pstr);
 Bin bin_create2(const char *pstr, unsigned int isize);
+Bin bin_create3(Bin a);
 void bin_free(Bin pbin);
+
+void bin_copy(Bin d, Bin s);
 
 void bin2bstr(Bin bin, char *szStr, size_t iLen);
 void bin2xstr(Bin bin, char *szStr, size_t iLen);
@@ -25,5 +28,7 @@ void bin_sub2(Bin a, Bin b, Bin *pr);
 void bin_mul2(Bin a, Bin b, Bin *pr);
 void bin_div2(Bin a, Bin b, Bin *pr);
 void bin_mod2(Bin a, Bin b, Bin *pr);
+
+void bin_compl(Bin a);
 
 #endif

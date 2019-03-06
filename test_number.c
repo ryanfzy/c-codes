@@ -46,6 +46,48 @@ START_TEST(test_bin_add_big)
 }
 END_TEST
 
+START_TEST(test_bin_add_big_big)
+{
+    char szRet[82] = {0};
+    Bin b1 = bin_create("x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef");
+    Bin b2 = bin_create("xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321");
+    Bin ret = bin_add(b1, b2);
+    bin2xstr(ret, szRet, 81);
+    ck_assert_msg(strcmp(szRet, "111111082181111111111108218111111111110821811111111111082181111111111108218111110") == 0, "bin add result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(ret);
+}
+END_TEST
+
+START_TEST(test_bin_add_big_big_to_big)
+{
+    char szRet[81] = {0};
+    Bin b1 = bin_create("x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef");
+    Bin b2 = bin_create("xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321");
+    Bin ret = bin_add(b1, b2);
+    bin2xstr(ret, szRet, 80);
+    ck_assert_msg(strcmp(szRet, "1234567890abcdf01111108218111111111110821811111111111082181111111111108218111110") == 0, "bin add result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(ret);
+}
+END_TEST
+
+START_TEST(test_bin_add_big_to_big_big)
+{
+    char szRet[81] = {0};
+    Bin b1 = bin_create("xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321");
+    Bin b2 = bin_create("x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef");
+    Bin ret = bin_add(b1, b2);
+    bin2xstr(ret, szRet, 80);
+    ck_assert_msg(strcmp(szRet, "1234567890abcdf01111108218111111111110821811111111111082181111111111108218111110") == 0, "bin add result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(ret);
+}
+END_TEST
+
 START_TEST(test_bin_mul)
 {
     char szRet[65] = {0};
@@ -62,12 +104,12 @@ END_TEST
 
 START_TEST(test_bin_mul_big)
 {
-    char szRet[65] = {0};
+    char szRet[129] = {0};
     Bin b1 = bin_create("x2dcaec4c2df4268937664439ba2f162fc2d76998cbaccff196ce3f0ad2");   // 1234567890123456789012345678901234567890123456789012345678901234567890
     Bin b2 = bin_create("x2dcaec4c2df4268937664439ba2f162fc2d76998cbaccff196ce3f0ad2");   // 1234567890123456789012345678901234567890123456789012345678901234567890
     Bin br = bin_mul(b1, b2);
-    bin2xstr(br, szRet, 64);
-    ck_assert_msg(strcmp(szRet, "526149ba9e864644df1a6622d80ee7e4a714e5cccc1c12b2ba0597084bd11444") == 0, "mul result is wrong");
+    bin2xstr(br, szRet, 128);
+    ck_assert_msg(strcmp(szRet, "0000000000000830f7ec8a7ce63e8648ff6321e9e69637ef2d74cc0afbc5cf00526149ba9e864644df1a6622d80ee7e4a714e5cccc1c12b2ba0597084bd11444") == 0, "mul result is wrong");
     bin_free(b1);
     bin_free(b2);
     bin_free(br);
@@ -96,6 +138,35 @@ START_TEST(test_bin_sub_big)
     Bin br = bin_sub(b1, b2);
     bin2xstr(br, szRet, 64);
     ck_assert_msg(strcmp(szRet, "000001408c764d4380d13cde08af9acf56f1553781074093284e764083877418") == 0, "sub result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
+}
+END_TEST
+
+START_TEST(test_bin_sub_big_big)
+{
+    char szRet[81] = {0};
+    Bin b1 = bin_create("xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321");
+    Bin b2 = bin_create("x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef");
+    Bin br = bin_sub(b1, b2);
+    bin2xstr(br, szRet, 80);
+    ck_assert_msg(strcmp(szRet, "eca86390f6b97532eca86390f6b97532eca86390f6b97532eca86390f6b97532eca86390f6b97532") == 0, "sub result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
+}
+END_TEST
+
+START_TEST(test_bin_sub_big_big_to_big)
+{
+    char szRet[81] = {0};
+    Bin b1 = bin_create("xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321");
+    Bin b2 = bin_create("x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef");
+    Bin br = bin_sub(b1, b2);
+    bin2xstr(br, szRet, 80);
+    printf("%s\n", szRet);
+    ck_assert_msg(strcmp(szRet, "fedcba0987654321eca86390f6b97532eca86390f6b97532eca86390f6b97532eca86390f6b97532") == 0, "sub result is wrong");
     bin_free(b1);
     bin_free(b2);
     bin_free(br);
@@ -155,6 +226,32 @@ START_TEST(test_bin_mod_big)
     bin_free(b1);
     bin_free(b2);
     bin_free(br);
+}
+END_TEST
+
+START_TEST(test_bin_mod_big_big)
+{
+    char szRet[65] = {0};
+    Bin b1 = bin_create("x39e58a8055b6fb264b75ec8c646509784204ac15a8c24e05babc9729ab9b055c3a9458e4ce3289560a38e08ba8175a9446ce14e608245ab3a9978a88d8acaa40");
+    Bin b2 = bin_create("xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
+    Bin br = bin_mod(b1, b2);
+    bin2xstr(br, szRet, 64);
+    printf("%s\n", szRet);
+    printf("%s\n", "8550e7d238fcf3086ba9adcf0fb52a9de3652194d06cb5bb38d50229b854fc49");
+    ck_assert_msg(strcmp(szRet, "8550e7d238fcf3086ba9adcf0fb52a9de3652194d06cb5bb38d50229b854fc49") == 0, "sub result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
+}
+END_TEST
+
+START_TEST(test_bin_create_big)
+{
+    char szRet[129] = {0};
+    Bin pa = bin_create("x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef");
+    bin2xstr(pa, szRet, 128);
+    ck_assert_msg(strcmp(szRet, "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef") == 0, "create big is wrong");
+    bin_free(pa);
 }
 END_TEST
 
@@ -254,14 +351,21 @@ Suite* make_add_suit(void)
     //tcase_add_test(tc_stack, test_int2str);
     tcase_add_test(tc_stack, test_bin_add);
     tcase_add_test(tc_stack, test_bin_add_big);
+    tcase_add_test(tc_stack, test_bin_add_big_big);
+    tcase_add_test(tc_stack, test_bin_add_big_big_to_big);
+    tcase_add_test(tc_stack, test_bin_add_big_to_big_big);
     tcase_add_test(tc_stack, test_bin_mul);
     tcase_add_test(tc_stack, test_bin_mul_big);
     tcase_add_test(tc_stack, test_bin_sub);
     tcase_add_test(tc_stack, test_bin_sub_big);
+    tcase_add_test(tc_stack, test_bin_sub_big_big);
+    tcase_add_test(tc_stack, test_bin_sub_big_big_to_big);
     tcase_add_test(tc_stack, test_bin_div);
     tcase_add_test(tc_stack, test_bin_div_big);
     tcase_add_test(tc_stack, test_bin_mod);
     tcase_add_test(tc_stack, test_bin_mod_big);
+    tcase_add_test(tc_stack, test_bin_mod_big_big);
+    tcase_add_test(tc_stack, test_bin_create_big);
     //tcase_add_test(tc_stack, test_bin_float2bin);
     //tcase_add_test(tc_stack, test_bin_lshift);
     //tcase_add_test(tc_stack, test_bin_2bstr);
