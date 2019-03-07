@@ -55,6 +55,7 @@ static char _ch2x(char ch)
 _bin* _bin_create()
 {
     _bin *pbin = malloc(sizeof(_bin));
+    pbin->pnext = NULL;
     bin_init(pbin);
     return pbin;
 }
@@ -191,6 +192,7 @@ bool bin_init(_bin *pbin)
 {
     if (pbin != NULL)
     {
+        //_bin_free(pbin->pnext);
         for (int i = 0; i < CHAR_NUM; i++)
             pbin->cBin[i] = 0;
         pbin->pnext = NULL;
@@ -555,6 +557,7 @@ void _bin_div(_bin *pa, _bin *pb, _bin *pr, _bin *pm)
                 pr->cBin[CHAR_NUM-1] |= 0x01;
             }
             bin_rshift(paligned, 1);
+        //bin_printx(px);
         }
         _bin_clean(px);
         if (pm != NULL)
@@ -586,26 +589,18 @@ void bin_sub2(Bin a, Bin b, Bin *ppr)
     _bin_sub(pa, pb, pr);
 }
 
-void _bin_complement2(_bin *pa, _bin *pr)
+void _bin_complement(_bin *pa)
 {
-    _bin *pa_next = pa;
-    _bin *pcmp_tmp = pr;
-    _bin *pcmp_next = pr;
-    while (pa_next != NULL)
+    if (pa != NULL)
     {
-        _bin_extend_if_null(&pcmp_next, &pcmp_tmp);
-        for (int i = 0; i < CHAR_NUM; i++)
-            pcmp_next->cBin[i] = ~(pa_next->cBin[i]);
-        pa_next = pa_next->pnext;
-        _bin_shift_next(&pcmp_tmp, &pcmp_next);
+        _bin *pa_next = pa;
+        while (pa_next != NULL)
+        {
+            for (int i = 0; i < CHAR_NUM; i++)
+                pa_next->cBin[i] = ~(pa_next->cBin[i]);
+            pa_next = pa_next->pnext;
+        }
     }
-}
-
-_bin* _bin_complement(_bin *pa)
-{
-    _bin *pr = _bin_create();
-    _bin_complement2(pa, pr);
-    return pr;
 }
 
 void _bin_discard_first_digit(_bin *pa)
@@ -624,19 +619,30 @@ void _bin_discard_first_digit(_bin *pa)
     }
 }
 
+void _bin_extend_if_required(_bin *pa, _bin *pb)
+{
+    if (pa == NULL)
+        return;
+    if (pa->pnext != NULL && pb->pnext == NULL)
+        pb->pnext = _bin_create();
+    _bin_extend_if_required(pa->pnext, pb->pnext);
+}
+
 void _bin_sub(_bin *pa, _bin *pb, _bin *pr)
 {
     if (pa != NULL && pb != NULL && pr != NULL)
     {
         _bin* pOne = (_bin*)bin_create("x1");
-        _bin *pcmp = _bin_complement(pb);
-        _bin *p2cmp = (_bin*)bin_add((Bin)pcmp, (Bin)pOne);
+        _bin *py =  _bin_create3(pb);
+        _bin_extend_if_required(pa, py);
+        _bin_complement(py);
+        _bin *p2cmp = (_bin*)bin_add((Bin)py, (Bin)pOne);
         _bin_add(pa, p2cmp, pr);
+        // assume the first block is 1 so free it
         _bin_discard_first_digit(pr);
-        _bin_clean(pr);
-        _bin_free(pOne);
-        _bin_free(pcmp);
         _bin_free(p2cmp);
+        _bin_free(py);
+        _bin_free(pOne);
     }
 }
 

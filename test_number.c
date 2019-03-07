@@ -165,7 +165,6 @@ START_TEST(test_bin_sub_big_big_to_big)
     Bin b2 = bin_create("x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef");
     Bin br = bin_sub(b1, b2);
     bin2xstr(br, szRet, 80);
-    printf("%s\n", szRet);
     ck_assert_msg(strcmp(szRet, "fedcba0987654321eca86390f6b97532eca86390f6b97532eca86390f6b97532eca86390f6b97532") == 0, "sub result is wrong");
     bin_free(b1);
     bin_free(b2);
@@ -232,12 +231,10 @@ END_TEST
 START_TEST(test_bin_mod_big_big)
 {
     char szRet[65] = {0};
-    Bin b1 = bin_create("x39e58a8055b6fb264b75ec8c646509784204ac15a8c24e05babc9729ab9b055c3a9458e4ce3289560a38e08ba8175a9446ce14e608245ab3a9978a88d8acaa40");
+    Bin b1 = bin_create("x39e58a8055b6fb264b75ec8c646509784204ac15a8c24e05babc9729ab9b055c3a9458e4ce3289560a38e08ba8175a9446ce14e608245ab3a9978a8bd8acaa40");
     Bin b2 = bin_create("xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f");
     Bin br = bin_mod(b1, b2);
     bin2xstr(br, szRet, 64);
-    printf("%s\n", szRet);
-    printf("%s\n", "8550e7d238fcf3086ba9adcf0fb52a9de3652194d06cb5bb38d50229b854fc49");
     ck_assert_msg(strcmp(szRet, "8550e7d238fcf3086ba9adcf0fb52a9de3652194d06cb5bb38d50229b854fc49") == 0, "sub result is wrong");
     bin_free(b1);
     bin_free(b2);
