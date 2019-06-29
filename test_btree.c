@@ -9,14 +9,6 @@ START_TEST(test_btree_create)
     BTree btree = create_btree();
     free_btree(btree);
     ck_assert_msg(check_mem(), "memory leak");
-    /*
-    ck_assert_msg(ptree->parent == NULL, "parent is not NULL");
-    ck_assert_msg(ptree->pchildren == NULL, "children is not NULL");
-    ck_assert_msg(ptree->pnode != NULL, "node is NULL");
-    ck_assert_int_eq(((TestData*)(ptree->pnode->pdata))->ivalue, 1);
-
-    tree_free(ptree);
-    */
 }
 END_TEST
 
@@ -33,11 +25,10 @@ START_TEST(test_btree_insert)
     btree_insert(btree, 70);
     btree_insert(btree, 80);
     btree_insert(btree, 90);
-    //btree_traverse(btree);
     btree2str(btree, strTree, 1024);
     free_btree(btree);
     //printf("%s\n", strTree);
-    ck_assert_msg(strcmp(strTree, "((10)20(30)40(50)60(70,80,90))") == 0, "tree is wrong");
+    ck_assert_msg(strcmp(strTree, "((10,20)30(40,50)60(70,80,90))") == 0, "tree is wrong");
     ck_assert_msg(check_mem(), "memory leak");
 }
 END_TEST
@@ -90,7 +81,58 @@ START_TEST(test_btree_insert3)
     btree2str(btree, strTree, 1024);
     free_btree(btree);
     //printf("%s\n", strTree);
-    ck_assert_msg(strcmp(strTree, "(((13)21(22,24,26))27((29,30)33(34,35,36)39(40)41(42,53,97)))") == 0, "tree is wrong");
+    ck_assert_msg(strcmp(strTree, "((13,21)22(24,26,27,29,30)33(34,35,36,39,40)41(42,53,97))") == 0, "tree is wrong");
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
+START_TEST(test_btree_delete)
+{
+    char strTree[] = "(((1,2)3(4,5,6)7(10,11,12)13(14,15))16((17,18,19)20(21,22)24(25,26)))";
+    BTree btree = btree_build(strTree, sizeof(strTree));
+
+    char strTree2[1024] = {0};
+
+    btree_delete(btree, 6);
+    memset(strTree2, 0, 1024);
+    btree2str(btree, strTree2, 1024);
+    ck_assert_msg(strcmp(strTree2, "(((1,2)3(4,5)7(10,11,12)13(14,15))16((17,18,19)20(21,22)24(25,26)))") == 0, "delete 6 is wrong");
+
+    btree_delete(btree, 13);
+    memset(strTree2, 0, 1024);
+    btree2str(btree, strTree2, 1024);
+    ck_assert_msg(strcmp(strTree2, "(((1,2)3(4,5)7(10,11)12(14,15))16((17,18,19)20(21,22)24(25,26)))") == 0, "delete 13 is wrong");
+
+    btree_delete(btree, 7);
+    memset(strTree2, 0, 1024);
+    btree2str(btree, strTree2, 1024);
+    ck_assert_msg(strcmp(strTree2, "(((1,2)3(4,5,10,11)12(14,15))16((17,18,19)20(21,22)24(25,26)))") == 0, "delete 7 is wrong");
+
+    btree_delete(btree, 4);
+    memset(strTree2, 0, 1024);
+    btree2str(btree, strTree2, 1024);
+    ck_assert_msg(strcmp(strTree2, "((1,2)3(5,10,11)12(14,15)16(17,18,19)20(21,22)24(25,26))") == 0, "delete 4 is wrong");
+
+    btree_delete(btree, 2);
+    memset(strTree2, 0, 1024);
+    btree2str(btree, strTree2, 1024);
+    ck_assert_msg(strcmp(strTree2, "((1,3)5(10,11)12(14,15)16(17,18,19)20(21,22)24(25,26))") == 0, "delete 2 is wrong");
+
+    free_btree(btree);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
+START_TEST(test_btree_build)
+{
+    char strTree[] = "(((1,2)3(4,5,6)7(10,11,12)13(14,15))16((17,18,19)20(21,22)24(25,26)))";
+    BTree btree = btree_build(strTree, sizeof(strTree));
+
+    char strTree2[1024] = {0};
+    btree2str(btree, strTree2, 1024);
+
+    free_btree(btree);
+    ck_assert_msg(strcmp(strTree, strTree2) == 0, "tree build is wrong");
     ck_assert_msg(check_mem(), "memory leak");
 }
 END_TEST
@@ -103,6 +145,8 @@ Suite* make_add_suit(void)
     tcase_add_test(tc_tree, test_btree_insert);
     tcase_add_test(tc_tree, test_btree_insert2);
     tcase_add_test(tc_tree, test_btree_insert3);
+    tcase_add_test(tc_tree, test_btree_delete);
+    tcase_add_test(tc_tree, test_btree_build);
     suite_add_tcase(s, tc_tree);
     return s;
 }

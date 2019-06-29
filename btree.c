@@ -13,7 +13,7 @@
 
 //#define DEGREE 3
 //#define ORDER (2*DEGREE)
-#define ORDER 5
+#define ORDER 6
 #define NODE_LEN ORDER
 #define KEY_LEN (NODE_LEN-1)
 
@@ -21,7 +21,6 @@ typedef struct __btree_node
 {
     int keys[KEY_LEN];
     struct __btree_node *pChildNodes[NODE_LEN];
-    bool bleaf;
 } _btree_node;
 
 _btree_node* _create_btree();
@@ -36,6 +35,8 @@ void _insert_key_to_tree(_btree_node*, int);
 void _insert_node(_btree_node*, int, _btree_node*);
 void _btree_traverse(_btree_node*);
 void _print_btree(_btree_node*);
+void _free_node(_btree_node*);
+void _delete_key_from_node(_btree_node*, int);
 
 BTree create_btree()
 {
@@ -47,19 +48,21 @@ void free_btree(BTree tree)
 {
     _btree_node *ptree = (_btree_node*)tree;
     if (ptree != NULL)
-    {
-        _destroy_btree(ptree);
-        _FREE(ptree);
-    }
+        _free_node(ptree);
 }
 
 void btree_insert(BTree tree, int key)
 {
     _btree_node *ptree = (_btree_node*)tree;
     if (ptree != NULL)
-    {
         _insert_key_to_tree(ptree, key);
-    }
+}
+
+void btree_delete(BTree tree, int key)
+{
+    _btree_node *ptree = (_btree_node*)tree;
+    if (ptree != NULL)
+        _delete_key_from_node(ptree, key);
 }
 
 void btree_traverse(BTree tree)
@@ -68,6 +71,77 @@ void btree_traverse(BTree tree)
     if (ptree != NULL)
     {
         _print_btree(ptree);
+    }
+}
+
+BTree btree_build(char *pstr, int size)
+{
+    if (pstr != NULL && size > 0)
+    {
+        int level = -1;
+        _btree_node *ptrees[10]; // supports 10 level nested tree
+        int indexes[level];
+        char pKey[10];
+        int keyIndex = 0;
+        for (int i = 0; i < size; i++)
+        {
+            if (pstr[i] == '(')
+            {
+                if (keyIndex > 0)
+                {
+                    int key = atoi(pKey);
+                    pKey[0] = '\0';
+                    keyIndex = 0;
+                    ptrees[level]->keys[indexes[level]] = key;
+                    indexes[level]++;
+                }
+                level++;
+                ptrees[level] = _create_btree();
+                indexes[level] = 0;
+            }
+            else if (pstr[i] == ')')
+            {
+                if (keyIndex > 0)
+                {
+                    int key = atoi(pKey);
+                    pKey[0] = '\0';
+                    keyIndex = 0;
+                    ptrees[level]->keys[indexes[level]] = key;
+                    indexes[level]++;
+                }
+                if (level > 0)
+                {
+                    _btree_node *pnode = ptrees[level];
+                    level--;
+                    ptrees[level]->pChildNodes[indexes[level]] = pnode;
+                }
+            }
+            else if (pstr[i] == ',')
+            {
+                int key = atoi(pKey);
+                pKey[0] = '\0';
+                keyIndex = 0;
+                ptrees[level]->keys[indexes[level]] = key;
+                indexes[level]++;
+            }
+            else if (pstr[i] >= '0' && pstr[i] <= '9')
+            {
+                pKey[keyIndex] = pstr[i];
+                keyIndex++;
+                pKey[keyIndex] = '\0';
+            }
+        }
+        return (long)ptrees[0];
+    }
+    return 0;
+}
+
+void _free_node(_btree_node *pnode)
+{
+    if (pnode != NULL)
+    {
+        _destroy_btree(pnode);
+        _FREE(pnode);
     }
 }
 
@@ -131,8 +205,8 @@ void _btree_traverse(_btree_node *ptree)
                 break;
             }
         }
-        printf(")");
         _btree_traverse(ptree->pChildNodes[i]);
+        printf(")");
     }
 }
 
@@ -158,7 +232,6 @@ void init_btree(_btree_node *ptree)
         ptree->keys[i] = 0;
     for (int i = 0; i < NODE_LEN; i++)
         ptree->pChildNodes[i] = NULL;
-    ptree->bleaf = false;
 }
 
 void _destroy_btree(_btree_node *ptree)
@@ -182,6 +255,8 @@ void _insert_key_to_tree(_btree_node *ptree, int key)
         // split root if it is full
         if (_is_node_full(px))
             _split_node(px, px);
+        // we can use recursion to replace the while loop
+        // but it would be slightly slower
         do
         {
             //printf("insert %d\n", key);
@@ -332,6 +407,7 @@ void _insert_node(_btree_node *pnode, int key, _btree_node *pRight)
         //printf("index %d\n", i);
         for (; i < KEY_LEN; i++)
         {
+            // insert and shift right by one
             int tmp_key = pnode->keys[i];
             pnode->keys[i] = key;
             key = tmp_key;
@@ -356,9 +432,235 @@ void _insert_key_to_node(_btree_node *pnode, int key)
         }
         for (; i < KEY_LEN; i++)
         {
+            // insert and shift right by one
             int tmp_key = pnode->keys[i];
             pnode->keys[i] = key;
             key = tmp_key;
         }
     }
 }
+
+static void _delete_key(_btree_node *pnode, int key)
+{
+    if (pnode != NULL)
+    {
+        int i = 0;
+        for (; i < KEY_LEN; i++)
+        {
+            if (key == pnode->keys[i])
+                break;
+        }
+        if (i < KEY_LEN)
+        {
+            for (; i < KEY_LEN-1; i++)
+            {
+                pnode->keys[i] = pnode->keys[i+1];
+                // remove the right node of the key
+                pnode->pChildNodes[i+1] = pnode->pChildNodes[i+2];
+            }
+            pnode->keys[KEY_LEN-1] = 0;
+            pnode->pChildNodes[NODE_LEN-1] = NULL;
+        }
+    }
+}
+
+static int _find_key(_btree_node *pnode, int key)
+{
+    if (pnode != NULL)
+    {
+        for (int i = 0; i < KEY_LEN; i++)
+        {
+            if (pnode->keys[i] == key)
+                return i;
+        }
+    }
+    return -1;
+}
+
+static int _get_key_count(_btree_node *pnode)
+{
+    if (pnode != NULL)
+    {
+        for (int i = 0; i < KEY_LEN; i++)
+        {
+            if (pnode->keys[i] == 0)
+                return i;
+        }
+        return KEY_LEN;
+    }
+    return 0;
+}
+
+static int _find_last_key(_btree_node *pnode)
+{
+    if (pnode != NULL)
+    {
+        for (int i = 1; i < KEY_LEN; i++)
+        {
+            if (pnode->keys[i] == 0)
+                return pnode->keys[i-1];
+        }
+        return pnode->keys[KEY_LEN-1];
+    }
+    return 0;
+}
+
+static int _find_first_key(_btree_node *pnode)
+{
+    if (pnode != NULL)
+    {
+        return pnode->keys[0];
+    }
+    return 0;
+}
+
+static void _move_node(_btree_node *pTo, _btree_node *pFrom)
+{
+    if (pTo != NULL && pFrom != NULL)
+    {
+        for (int i = 0; i < KEY_LEN; i++)
+        {
+            pTo->keys[i] = pFrom->keys[i];
+            pTo->pChildNodes[i] = pFrom->pChildNodes[i];
+            pFrom->keys[i] = 0;
+            pFrom->pChildNodes[i] = NULL;
+        }
+        pTo->pChildNodes[NODE_LEN-1] = pFrom->pChildNodes[NODE_LEN-1];
+        pFrom->pChildNodes[NODE_LEN-1] = NULL;
+    }
+}
+
+static void _merge_nodes(_btree_node *pParent, _btree_node *pLeft, _btree_node *pRight, int key)
+{
+    if (pParent != NULL && pLeft != NULL && pRight != NULL)
+    {
+        int i = 0;
+        for (; i < KEY_LEN; i++)
+        {
+            if (pLeft->keys[i] == 0)
+                break;
+        }
+        if (i < KEY_LEN)
+        {
+            pLeft->keys[i] = key;
+            i++;
+            int j = 0;
+            for (; i < KEY_LEN; i++, j++)
+            {
+                pLeft->keys[i] = pRight->keys[j];
+                pLeft->pChildNodes[i] = pRight->pChildNodes[j];
+                pRight->keys[j] = 0;
+                pRight->pChildNodes[j] = NULL;
+            }
+            pLeft->pChildNodes[NODE_LEN-1] = pRight->pChildNodes[j];
+            pRight->pChildNodes[j] = NULL;
+            _delete_key(pParent, key);
+            // this happens if pParent is root, so it reduces the level of tree by one
+            if (_get_key_count(pParent) == 0)
+            {
+                _move_node(pParent, pLeft);
+                _free_node(pLeft);
+            }
+        }
+    }
+}
+
+static int _find_node(_btree_node *pnode, int key)
+{
+    if (pnode != NULL)
+    {
+        for (int i = 0; i < KEY_LEN; i++)
+        {
+            if (pnode->keys[i] > key)
+                return i;
+            else if (pnode->keys[i] == key)
+                return -1;
+        }
+        return NODE_LEN-1;
+    }
+    return -1;
+}
+
+void _delete_key_from_node(_btree_node *pnode, int key)
+{
+    int MIN_KEY_LEN = ceil(NODE_LEN / 2.0)-1;
+    if (pnode != NULL)
+    {
+        if (_is_leaf(pnode))
+        {
+            _delete_key(pnode, key);
+        }
+        else
+        {
+            int i = _find_key(pnode, key);
+            if (i > -1)
+            {
+                _btree_node *pLeft = pnode->pChildNodes[i];
+                _btree_node *pRight = pnode->pChildNodes[i+1];
+                if (_get_key_count(pLeft) > MIN_KEY_LEN)
+                {
+                    key = _find_last_key(pLeft);
+                    pnode->keys[i] = key;
+                    pnode = pLeft;
+                }
+                else if (_get_key_count(pRight) > MIN_KEY_LEN)
+                {
+                    key = _find_first_key(pRight);
+                    pnode->keys[i] = key;
+                    pnode = pRight;
+                }
+                else
+                {
+                    _merge_nodes(pnode, pLeft, pRight, key);
+                    _free_node(pRight);
+                }
+                _delete_key_from_node(pnode, key);
+            }
+            else
+            {
+                i = _find_node(pnode, key);
+                if (i > -1)
+                {
+                    _btree_node *pCur = pnode->pChildNodes[i];
+                    if (_get_key_count(pCur) <= MIN_KEY_LEN)
+                    {
+                        _btree_node *pSibling = NULL;
+                        int newKey = 0;
+                        if (i < NODE_LEN-1)
+                        {
+                            pSibling = pnode->pChildNodes[i+1];
+                            newKey = pnode->keys[i];
+                        }
+                        if (_get_key_count(pSibling) <= MIN_KEY_LEN && i > 0)
+                        {
+                            pSibling = pnode->pChildNodes[i-1];
+                            newKey = pnode->keys[i-1];
+                        }
+                        if (_get_key_count(pSibling) > MIN_KEY_LEN)
+                        {
+                            _delete_key_from_node(pnode, newKey);
+                            _insert_key_to_node(pCur, newKey);
+                            _delete_key_from_node(pCur, key);
+                        }
+                        else
+                        {
+                            _btree_node *pLeft = pCur;
+                            _btree_node *pRight = pSibling;
+                            if (pLeft->keys[0] > pRight->keys[0])
+                            {
+                                pLeft = pSibling;
+                                pRight = pCur;
+                            }
+                            _merge_nodes(pnode, pLeft, pRight, newKey);
+                            _free_node(pRight);
+                            _delete_key_from_node(pnode, key);
+                        }
+                    }
+                    else
+                        _delete_key_from_node(pCur, key);
+                }
+            }
+        }
+    }
+}
+
