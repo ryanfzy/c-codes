@@ -1,5 +1,9 @@
 #include <string.h>
 #include "binary.h"
+#include "mem_d.h"
+
+#define _MALLOC malloc_d
+#define _FREE free_d
 
 #define BIN_LEN 256
 #define CHAR_BITS 8
@@ -52,7 +56,7 @@ void bin_init(_bin *pbin)
 
 _bin* _bin_create()
 {
-    _bin *pbin = malloc(sizeof(_bin));
+    _bin *pbin = _MALLOC(sizeof(_bin));
     bin_init(pbin);
     return pbin;
 }
@@ -135,7 +139,7 @@ void _bin_free(_bin *pa)
     if (pa != NULL)
     {
         _bin_free(pa->pnext);
-        free(pa);
+        _FREE(pa);
     }
 }
 
