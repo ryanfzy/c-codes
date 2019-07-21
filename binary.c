@@ -15,6 +15,7 @@ typedef struct _bin32
 {
     unsigned char cBin[CHAR_NUM];
     _bin *pnext;
+    bool sig;
 } _bin;
 
 void bin_lshift(_bin*, int);
@@ -25,6 +26,7 @@ void _bin_sub(_bin*, _bin*, _bin*);
 void _bin_div(_bin*, _bin*, _bin*, _bin*);
 void bin_printb(_bin*);
 void bin_printx(_bin*);
+void _bin_un2complement(_bin*);
 
 static char _x2ch(char ch)
 {
@@ -51,6 +53,7 @@ void bin_init(_bin *pbin)
         for (int i = 0; i < CHAR_NUM; i++)
             pbin->cBin[i] = 0;
         pbin->pnext = NULL;
+        pbin->sig = true;
     }
 }
 
@@ -161,6 +164,7 @@ void _bin_init2(_bin *pa, _bin *pb)
                 pa->pnext = _bin_create();
             _bin_init2(pa->pnext, pb->pnext);
         }
+        pa->sig = pb->sig;
     }
 }
 
@@ -281,45 +285,64 @@ void bin_add2(Bin a, Bin b, Bin *ppr)
     _bin_add(pa, pb, pr);
 }
 
-
 void _bin_add(_bin *pa, _bin *pb, _bin *pr)
 {
     if (pa != NULL && pb != NULL && pr != NULL)
     {
         _bin *px = _bin_create3(pa);
         _bin *py = _bin_create3(pb);
-        _bin *pa_tmp = NULL, *pa_next = px;
-        _bin *pb_tmp = NULL, *pb_next = py;
-        _bin *pr_tmp = NULL, *pr_next = pr;
-        char chCarry = 0x00;
-        while (chCarry > 0 || pa_next != NULL || pb_next != NULL)
+        if (px->sig && !py->sig)
         {
-            _bin_extend_if_null(&pa_next, &pa_tmp);
-            _bin_extend_if_null(&pb_next, &pb_tmp);
-            _bin_extend_if_null(&pr_next, &pr_tmp);
-
-            for (int i = CHAR_NUM-1; i >= 0; i--)
+            py->sig = true;
+            _bin_sub(px, py, pr);
+        }
+        else if (!px->sig && py->sig)
+        {
+            px->sig = true;
+            _bin_sub(py, px, pr);
+        }
+        else if(!px->sig && !py->sig)
+        {
+            px->sig = true;
+            py->sig = true;
+            _bin_add(px, py, pr);
+            pr->sig = false;
+        }
+        else
+        {
+            _bin *pa_tmp = NULL, *pa_next = px;
+            _bin *pb_tmp = NULL, *pb_next = py;
+            _bin *pr_tmp = NULL, *pr_next = pr;
+            char chCarry = 0x00;
+            while (chCarry > 0 || pa_next != NULL || pb_next != NULL)
             {
-                for (int j = 0; j < 8; j++)
+                _bin_extend_if_null(&pa_next, &pa_tmp);
+                _bin_extend_if_null(&pb_next, &pb_tmp);
+                _bin_extend_if_null(&pr_next, &pr_tmp);
+    
+                for (int i = CHAR_NUM-1; i >= 0; i--)
                 {
-                    char chCur = 0x00;
-                    int iMsk = 1 << j;
-                    if ((pa_next->cBin[i] & iMsk) == (pb_next->cBin[i] & iMsk))
+                    for (int j = 0; j < 8; j++)
                     {
-                        chCur = chCarry;
-                        chCarry = (pa_next->cBin[i] & iMsk) ? 0x01 : 0x00;
+                        char chCur = 0x00;
+                        int iMsk = 1 << j;
+                        if ((pa_next->cBin[i] & iMsk) == (pb_next->cBin[i] & iMsk))
+                        {
+                            chCur = chCarry;
+                            chCarry = (pa_next->cBin[i] & iMsk) ? 0x01 : 0x00;
+                        }
+                        else
+                            chCur = (chCarry == 0x01) ? 0x00 : 0x01;
+                        if (chCur)
+                            pr_next->cBin[i] |= (chCur << j);
+                        else
+                            pr_next->cBin[i] &= ~(1 << j);
                     }
-                    else
-                        chCur = (chCarry == 0x01) ? 0x00 : 0x01;
-                    if (chCur)
-                        pr_next->cBin[i] |= (chCur << j);
-                    else
-                        pr_next->cBin[i] &= ~(1 << j);
                 }
+                _bin_shift_next(&pa_tmp, &pa_next);
+                _bin_shift_next(&pb_tmp, &pb_next);
+                _bin_shift_next(&pr_tmp, &pr_next);
             }
-            _bin_shift_next(&pa_tmp, &pa_next);
-            _bin_shift_next(&pb_tmp, &pb_next);
-            _bin_shift_next(&pr_tmp, &pr_next);
         }
         _bin_free(px);
         _bin_free(py);
@@ -354,6 +377,8 @@ void _bin_mul(_bin *pa, _bin *pb, _bin *pr)
     {
         _bin *px = _bin_create3(pa);
         _bin *py = _bin_create3(pb);
+        px->sig = true;
+        py->sig = true;
         for (int i = CHAR_NUM-1; i >= 0; i--)
         {
             for (int j = 0; j < 8; j++)
@@ -363,6 +388,7 @@ void _bin_mul(_bin *pa, _bin *pb, _bin *pr)
                 bin_lshift(px, 1);
             }
         }
+        pr->sig = px->sig && py->sig;
         _bin_free(px);
         _bin_free(py);
     }
@@ -376,6 +402,21 @@ int bin_eq(_bin *pa, _bin *pb)
         return 1;
     else if (pa == NULL && pb != NULL)
         return -1;
+    else if (pa->sig && !pb->sig)
+        return 1;
+    else if (!pa->sig && pb->sig)
+        return -1;
+    else if (!pa->sig && !pb->sig)
+    {
+        _bin *px = _bin_create3(pa);
+        _bin *py = _bin_create3(pb);
+        px->sig = true;
+        py->sig = true;
+        int ret = bin_eq(px, py);
+        _bin_free(px);
+        _bin_free(py);
+        return ret == 1 ? -1 : (ret == -1 ? 1 : 0);
+    }
     int ret = bin_eq(pa->pnext, pb->pnext);
     if (ret == 0)
     {
@@ -476,26 +517,60 @@ void bin_div2(Bin a, Bin b, Bin *ppr)
     _bin_div(pa, pb, pr, NULL);
 }
 
+void _bin_un2complement(_bin *pa)
+{
+    if (pa != NULL)
+    {
+        _bin *phi = pa;
+        while (pa->pnext != NULL)
+            phi = pa->pnext;
+        if (phi->cBin[0] & 0x80)
+        {
+            _bin *pOne = (_bin*)bin_create("x1");
+            _bin_sub(pa, pOne, pa);
+            _bin *pnext = pa;
+            while (pnext != NULL)
+            {
+                for (int i = 0; i < CHAR_NUM; i++)
+                    pnext->cBin[i] = ~(pnext->cBin[i]);
+                pnext = pnext->pnext;
+            }
+            _bin_free(pOne);
+        }
+    }
+}
+
 void _bin_div(_bin *pa, _bin *pb, _bin *pr, _bin *pm)
 {
     if (pa != NULL && pb != NULL && pr != NULL)
     {
         _bin *px = _bin_create3(pa);
-        _bin *paligned = _bin_align(px, pb);
-        while (bin_eq(paligned, pb) >= 0)
+        _bin *py = _bin_align(px, pb);
+        px->sig = true;
+        py->sig = true;
+        while (bin_eq(py, pb) >= 0)
         {
             bin_lshift(pr, 1);
-            if (bin_eq(px, paligned) >= 0)
+            if (bin_eq(px, py) >= 0)
             {
-                _bin_sub(px, paligned, px);
+                _bin_sub(px, py, px);
                 pr->cBin[CHAR_NUM-1] |= 0x01;
             }
-            bin_rshift(paligned, 1);
+            bin_rshift(py, 1);
             //bin_printx(px);
         }
         if (pm != NULL)
+        {
+            if (!pa->sig)
+            {
+                // return positive reminder
+                _bin_sub(px, pb, px);
+                px->sig = true;
+            }
             _bin_init2(pm, px);
-        _bin_free(paligned);
+        }
+        pr->sig = pa->sig == pb->sig;
+        _bin_free(py);
         _bin_free(px);
     }
 }
@@ -522,10 +597,11 @@ void bin_sub2(Bin a, Bin b, Bin *ppr)
     _bin_sub(pa, pb, pr);
 }
 
-void _bin_complement(_bin *pa)
+void _bin_2complement(_bin *pa)
 {
     if (pa != NULL)
     {
+        _bin* pOne = (_bin*)bin_create("x1");
         _bin *pa_next = pa;
         while (pa_next != NULL)
         {
@@ -533,6 +609,8 @@ void _bin_complement(_bin *pa)
                 pa_next->cBin[i] = ~(pa_next->cBin[i]);
             pa_next = pa_next->pnext;
         }
+        _bin_add(pa, pOne, pa);
+        _bin_free(pOne);
     }
 }
 
@@ -564,18 +642,42 @@ void _bin_sub(_bin *pa, _bin *pb, _bin *pr)
 {
     if (pa != NULL && pb != NULL && pr != NULL)
     {
-        _bin* pOne = (_bin*)bin_create("x1");
+        _bin *px =  _bin_create3(pa);
         _bin *py =  _bin_create3(pb);
-        _bin_extend_if_required(pa, py);
-        _bin_complement(py);
-        _bin *p2cmp = (_bin*)bin_add((Bin)py, (Bin)pOne);
-        _bin_add(pa, p2cmp, pr);
-        // assume the first block is 1 so free it
-        _bin_discard_first_digit(pr);
-        _bin_clean(pr);
-        _bin_free(p2cmp);
+        if (px->sig && !py->sig)
+        {
+            py->sig = true;
+            _bin_add(px, py, pr);
+        }
+        else if (!px->sig && py->sig)
+        {
+            px->sig = true;
+            py->sig = true;
+            _bin_add(px, py, pr);
+            pr->sig = false;
+        }
+        else if (!px->sig && !py->sig)
+        {
+            py->sig = true;
+            _bin_sub(py, px, pr);
+        }
+        else
+        {
+            _bin_extend_if_required(px, py);
+            bool sig = bin_eq(px, py) >= 0;
+            _bin_2complement(py);
+            _bin_add(px, py, pr);
+            // assume the first block is 1 so free it
+            _bin_discard_first_digit(pr);
+            if (!sig)
+            {
+                pr->sig = false;
+                _bin_un2complement(pr);
+            }
+            _bin_clean(pr);
+        }
+        _bin_free(px);
         _bin_free(py);
-        _bin_free(pOne);
     }
 }
 
