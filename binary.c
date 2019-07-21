@@ -9,12 +9,15 @@
 #define CHAR_BITS 8
 #define CHAR_NUM BIN_LEN/CHAR_BITS
 
-typedef struct _bin32 _bin;
-
-typedef struct _bin32
+typedef struct __num
 {
-    unsigned char cBin[CHAR_NUM];
-    _bin *pnext;
+    unsigned char bits[CHAR_NUM];
+    struct __num *pnext;
+} _num;
+
+typedef struct __bin
+{
+    _num num;
     bool sig;
 } _bin;
 
@@ -46,13 +49,21 @@ static char _ch2x(char ch)
     return ch;
 }
 
+void _num_init(_num *pnum)
+{
+    if (pnum != NULL)
+    {
+        for (int i = 0; i < CHAR_NUM; i++)
+            pnum->bits[i] = 0;
+        pnum->pnext = NULL;
+    }
+}
+
 void bin_init(_bin *pbin)
 {
     if (pbin != NULL)
     {
-        for (int i = 0; i < CHAR_NUM; i++)
-            pbin->cBin[i] = 0;
-        pbin->pnext = NULL;
+        _num_init(&pbin->num);
         pbin->sig = true;
     }
 }
@@ -64,11 +75,18 @@ _bin* _bin_create()
     return pbin;
 }
 
-void _bin_extend_if_null(_bin **ppa, _bin **ppb)
+_num* _num_create()
+{
+    _num *pnum = _MALLOC(sizeof(_num));
+    _num_init(pnum);
+    return pnum;
+}
+
+void _bin_extend_if_null(_num **ppa, _num **ppb)
 {
     if (*ppa == NULL)
     {
-        (*ppb)->pnext = _bin_create();
+        (*ppb)->pnext = _num_create();
         *ppa = (*ppb)->pnext;
     }
 }
@@ -76,19 +94,19 @@ void _bin_extend_if_null(_bin **ppa, _bin **ppb)
 _bin* _bin_create_x(const char *pstr, unsigned int isize)
 {
     _bin *pa = _bin_create();
-    _bin *pa_tmp = pa;
-    _bin *pa_next = pa_tmp;
+    _num *pn_tmp = &pa->num;
+    _num *pn_next = pn_tmp;
     int inext = isize;
     while (inext > 0)
     {
-        _bin_extend_if_null(&pa_next, &pa_tmp);
+        _bin_extend_if_null(&pn_next, &pn_tmp);
         for (int i = CHAR_NUM-1; i >= 0 && inext >= 0; i--)
         {
             char ch1 = _x2ch((--inext >= 0) ? pstr[inext] : 0);
             char ch2 = _x2ch((--inext >= 0) ? pstr[inext] : 0);
-            pa_next->cBin[i] = (ch2 << 4 | ch1);
+            pn_next->bits[i] = (ch2 << 4 | ch1);
         }
-        pa_next = pa_next->pnext;
+        pn_next = pn_next->pnext;
     }
     return pa;
 }
@@ -115,15 +133,28 @@ Bin bin_create2(const char *pstr, unsigned int isize)
     return 0;
 }
 
+_num* _num_create3(_num *pn)
+{
+    if (pn != NULL)
+    {
+        _num *pn2 = _num_create();
+        memcpy(pn2->bits, pn->bits, sizeof(pn->bits));
+        if (pn->pnext != NULL)
+            pn2->pnext = _num_create3(pn->pnext);
+        return pn2;
+    }
+    return NULL;
+}
 
 _bin* _bin_create3(_bin *pa)
 {
     if (pa != NULL)
     {
         _bin *pa2 = _bin_create();
-        memcpy(pa2->cBin, pa->cBin, sizeof(pa->cBin));
-        if (pa->pnext != NULL)
-            pa2->pnext = _bin_create3(pa->pnext);
+        memcpy(pa2->num.bits, pa->num.bits, sizeof(pa->num.bits));
+        if (pa->num.pnext != NULL)
+            pa2->num.pnext = _num_create3(pa->num.pnext);
+        pa2->sig = pa->sig;
         return pa2;
     }
     return NULL;
@@ -137,11 +168,20 @@ Bin bin_create3(Bin a)
     return 0;
 }
 
+void _num_free(_num *pn)
+{
+    if (pn != NULL)
+    {
+        _num_free(pn->pnext);
+        _FREE(pn);
+    }
+}
+
 void _bin_free(_bin *pa)
 {
     if (pa != NULL)
     {
-        _bin_free(pa->pnext);
+        _num_free(pa->num.pnext);
         _FREE(pa);
     }
 }
@@ -157,40 +197,39 @@ void _bin_init2(_bin *pa, _bin *pb)
 {
     if (pa != NULL && pb != NULL)
     {
-        memcpy(pa->cBin, pb->cBin, sizeof(pb->cBin));
-        if (pb->pnext != NULL)
+        memcpy(pa->num.bits, pb->num.bits, sizeof(pb->num.bits));
+        if (pb->num.pnext != NULL)
         {
-            if (pa->pnext == NULL)
-                pa->pnext = _bin_create();
-            _bin_init2(pa->pnext, pb->pnext);
+            _num_free(pa->num.pnext);
+            pa->num.pnext = _num_create3(pb->num.pnext);
         }
         pa->sig = pb->sig;
     }
 }
 
-void _bin_shift_next(_bin **ppa, _bin **ppb)
+void _num_shift_next(_num **ppa, _num **ppb)
 {
     *ppa = *ppb;
     *ppb = (*ppa)->pnext;
 }
 
-void _bin_lshift1(_bin *pa)
+void _num_lshift1(_num *pn)
 {
-    if (pa != NULL)
+    if (pn != NULL)
     {
         int iBit = 0;
-        _bin *pa_tmp = pa;
-        _bin *pa_next = pa_tmp;
-        while (iBit > 0 || pa_next != NULL)
+        _num *pn_tmp = pn;
+        _num *pn_next = pn_tmp;
+        while (iBit > 0 || pn_next != NULL)
         {
-            _bin_extend_if_null(&pa_next, &pa_tmp);
+            _bin_extend_if_null(&pn_next, &pn_tmp);
             for (int i = CHAR_NUM-1; i >= 0; i--)
             {
-                int inext = pa_next->cBin[i] >> 7;
-                pa_next->cBin[i] = ((pa_next->cBin[i] << 1) | iBit);
+                int inext = pn_next->bits[i] >> 7;
+                pn_next->bits[i] = ((pn_next->bits[i] << 1) | iBit);
                 iBit = inext;
             }
-            _bin_shift_next(&pa_tmp, &pa_next);
+            _num_shift_next(&pn_tmp, &pn_next);
         }
     }
 }
@@ -200,7 +239,7 @@ void bin_lshift(_bin *pbin, int iShift)
     if (pbin != NULL)
     {
         for (int i = 0; i < iShift; i++)
-            _bin_lshift1(pbin);
+            _num_lshift1(&pbin->num);
     }
 }
 
@@ -211,42 +250,42 @@ bool bin_init_istr(_bin *pbin, char *szStr, size_t iLen)
 }
 */
 
-int _bin_is_zero(_bin *pa)
+int _num_is_zero(_num *pn)
 {
-    if (pa != NULL)
+    if (pn != NULL)
     {
         for (int i = 0; i < CHAR_NUM; i++)
         {
-            if (pa->cBin[i] > 0)
+            if (pn->bits[i] > 0)
                 return false;
         }
     }
     return true;
 }
 
-void _bin_clean(_bin *pa)
+void _num_clean(_num *pn)
 {
-    if (pa != NULL)
+    if (pn != NULL)
     {
-        _bin_clean(pa->pnext);
-        if (pa->pnext != NULL && _bin_is_zero(pa->pnext))
+        _num_clean(pn->pnext);
+        if (pn->pnext != NULL && _num_is_zero(pn->pnext))
         {
-            _bin_free(pa->pnext);
-            pa->pnext = NULL;
+            _num_free(pn->pnext);
+            pn->pnext = NULL;
         }
     }
 }
 
-int _bin_rshift1(_bin *pa)
+int _num_rshift1(_num *pn)
 {
     int ibit = 0;
-    if (pa != NULL)
+    if (pn != NULL)
     {
-        ibit = _bin_rshift1(pa->pnext);
+        ibit = _num_rshift1(pn->pnext);
         for (int i = 0; i < CHAR_NUM; i++)
         {
-            int ibit_tmp = pa->cBin[i] & 1;
-            pa->cBin[i] = (ibit << 7) | (pa->cBin[i] >> 1);
+            int ibit_tmp = pn->bits[i] & 1;
+            pn->bits[i] = (ibit << 7) | (pn->bits[i] >> 1);
             ibit = ibit_tmp;
         }
     }
@@ -258,8 +297,8 @@ void bin_rshift(_bin *pa, int iShift)
     if (pa != NULL)
     {
         for (int i = 0; i < iShift; i++)
-            _bin_rshift1(pa);
-        _bin_clean(pa);
+            _num_rshift1(&pa->num);
+        _num_clean(&pa->num);
     }
 }
 
@@ -310,9 +349,9 @@ void _bin_add(_bin *pa, _bin *pb, _bin *pr)
         }
         else
         {
-            _bin *pa_tmp = NULL, *pa_next = px;
-            _bin *pb_tmp = NULL, *pb_next = py;
-            _bin *pr_tmp = NULL, *pr_next = pr;
+            _num *pa_tmp = NULL, *pa_next = &px->num;
+            _num *pb_tmp = NULL, *pb_next = &py->num;
+            _num *pr_tmp = NULL, *pr_next = &pr->num;
             char chCarry = 0x00;
             while (chCarry > 0 || pa_next != NULL || pb_next != NULL)
             {
@@ -326,22 +365,22 @@ void _bin_add(_bin *pa, _bin *pb, _bin *pr)
                     {
                         char chCur = 0x00;
                         int iMsk = 1 << j;
-                        if ((pa_next->cBin[i] & iMsk) == (pb_next->cBin[i] & iMsk))
+                        if ((pa_next->bits[i] & iMsk) == (pb_next->bits[i] & iMsk))
                         {
                             chCur = chCarry;
-                            chCarry = (pa_next->cBin[i] & iMsk) ? 0x01 : 0x00;
+                            chCarry = (pa_next->bits[i] & iMsk) ? 0x01 : 0x00;
                         }
                         else
                             chCur = (chCarry == 0x01) ? 0x00 : 0x01;
                         if (chCur)
-                            pr_next->cBin[i] |= (chCur << j);
+                            pr_next->bits[i] |= (chCur << j);
                         else
-                            pr_next->cBin[i] &= ~(1 << j);
+                            pr_next->bits[i] &= ~(1 << j);
                     }
                 }
-                _bin_shift_next(&pa_tmp, &pa_next);
-                _bin_shift_next(&pb_tmp, &pb_next);
-                _bin_shift_next(&pr_tmp, &pr_next);
+                _num_shift_next(&pa_tmp, &pa_next);
+                _num_shift_next(&pb_tmp, &pb_next);
+                _num_shift_next(&pr_tmp, &pr_next);
             }
         }
         _bin_free(px);
@@ -383,7 +422,7 @@ void _bin_mul(_bin *pa, _bin *pb, _bin *pr)
         {
             for (int j = 0; j < 8; j++)
             {
-                if (py->cBin[i] & (1 << j))
+                if (py->num.bits[i] & (1 << j))
                     _bin_add(pr, px, pr);
                 bin_lshift(px, 1);
             }
@@ -394,6 +433,28 @@ void _bin_mul(_bin *pa, _bin *pb, _bin *pr)
     }
 }
 
+int _num_eq(_num *pn, _num *pm)
+{
+    if (pn == NULL && pm == NULL)
+        return 0;
+    else if (pn != NULL && pm == NULL)
+        return 1;
+    else if (pn == NULL && pm != NULL)
+        return -1;
+    int ret = _num_eq(pn->pnext, pm->pnext);
+    if (ret == 0)
+    {
+        for (int i = 0; i < CHAR_NUM; i++)
+        {
+            if (pn->bits[i] > pm->bits[i])
+                return 1;
+            else if (pn->bits[i] < pm->bits[i])
+                return -1;
+        }
+    }
+    return ret;
+}
+
 int bin_eq(_bin *pa, _bin *pb)
 {
     if (pa == NULL && pb == NULL)
@@ -402,32 +463,13 @@ int bin_eq(_bin *pa, _bin *pb)
         return 1;
     else if (pa == NULL && pb != NULL)
         return -1;
-    else if (pa->sig && !pb->sig)
+    if (pa->sig && !pb->sig)
         return 1;
     else if (!pa->sig && pb->sig)
         return -1;
-    else if (!pa->sig && !pb->sig)
-    {
-        _bin *px = _bin_create3(pa);
-        _bin *py = _bin_create3(pb);
-        px->sig = true;
-        py->sig = true;
-        int ret = bin_eq(px, py);
-        _bin_free(px);
-        _bin_free(py);
-        return ret == 1 ? -1 : (ret == -1 ? 1 : 0);
-    }
-    int ret = bin_eq(pa->pnext, pb->pnext);
-    if (ret == 0)
-    {
-        for (int i = 0; i < CHAR_NUM; i++)
-        {
-            if (pa->cBin[i] > pb->cBin[i])
-                return 1;
-            else if (pa->cBin[i] < pb->cBin[i])
-                return -1;
-        }
-    }
+    int ret = _num_eq(&pa->num, &pb->num);
+    if (!pa->sig && !pb->sig)
+        ret = (ret == 1 ? -1 : (ret == -1 ? 1 : ret));
     return ret;
 }
 
@@ -435,21 +477,21 @@ int _bin_get_startIndex(_bin *pa)
 {
     if (pa != NULL)
     {
-        _bin *pa_next = pa;
-        for (; pa_next->pnext != NULL; pa_next = pa_next->pnext);
+        _num *pn_next = &pa->num;
+        for (; pn_next->pnext != NULL; pn_next = pn_next->pnext);
 
         for (int i = 0; i < CHAR_NUM; i++)
         {
-            if (pa_next->cBin[i] > 0)
+            if (pn_next->bits[i] > 0)
             {
                 for (int j = 7; j >= 0; j--)
                 {
-                    if (pa_next->cBin[i] & (1 << j))
+                    if (pn_next->bits[i] & (1 << j))
                         return i * CHAR_BITS + 8-j-1;
                 }
             }
         }
-        pa_next = pa_next->pnext;
+        pn_next = pn_next->pnext;
     }
     return -1;
 }
@@ -460,9 +502,9 @@ _bin* _bin_align(_bin *pa, _bin *pb)
     {
         int ia = _bin_get_startIndex(pa);
         int ib = _bin_get_startIndex(pb);
-        _bin *pa_next = pa;
+        _num *pn_next = &pa->num;
         int iext = -1;
-        for (; pa_next != NULL; iext++, pa_next = pa_next->pnext);
+        for (; pn_next != NULL; iext++, pn_next = pn_next->pnext);
         ib = ib + iext * BIN_LEN;
         _bin *pr = _bin_create3(pb);
         bin_lshift(pr, ib - ia);
@@ -491,7 +533,9 @@ void bin_mod2(Bin a, Bin b, Bin *ppm)
         *ppm = (Bin)pm;
     }
     else
+    {
         bin_init(pm);
+    }
     _bin_div(pa, pb, &r, pm);
 }
 
@@ -521,22 +565,16 @@ void _bin_un2complement(_bin *pa)
 {
     if (pa != NULL)
     {
-        _bin *phi = pa;
-        while (pa->pnext != NULL)
-            phi = pa->pnext;
-        if (phi->cBin[0] & 0x80)
+        _bin *pOne = (_bin*)bin_create("x1");
+        _bin_sub(pa, pOne, pa);
+        _num *pnext = &pa->num;
+        while (pnext != NULL)
         {
-            _bin *pOne = (_bin*)bin_create("x1");
-            _bin_sub(pa, pOne, pa);
-            _bin *pnext = pa;
-            while (pnext != NULL)
-            {
-                for (int i = 0; i < CHAR_NUM; i++)
-                    pnext->cBin[i] = ~(pnext->cBin[i]);
-                pnext = pnext->pnext;
-            }
-            _bin_free(pOne);
+            for (int i = 0; i < CHAR_NUM; i++)
+                pnext->bits[i] = ~(pnext->bits[i]);
+            pnext = pnext->pnext;
         }
+        _bin_free(pOne);
     }
 }
 
@@ -554,11 +592,12 @@ void _bin_div(_bin *pa, _bin *pb, _bin *pr, _bin *pm)
             if (bin_eq(px, py) >= 0)
             {
                 _bin_sub(px, py, px);
-                pr->cBin[CHAR_NUM-1] |= 0x01;
+                pr->num.bits[CHAR_NUM-1] |= 0x01;
             }
             bin_rshift(py, 1);
             //bin_printx(px);
         }
+        pr->sig = pa->sig == pb->sig;
         if (pm != NULL)
         {
             if (!pa->sig)
@@ -569,7 +608,6 @@ void _bin_div(_bin *pa, _bin *pb, _bin *pr, _bin *pm)
             }
             _bin_init2(pm, px);
         }
-        pr->sig = pa->sig == pb->sig;
         _bin_free(py);
         _bin_free(px);
     }
@@ -602,40 +640,40 @@ void _bin_2complement(_bin *pa)
     if (pa != NULL)
     {
         _bin* pOne = (_bin*)bin_create("x1");
-        _bin *pa_next = pa;
-        while (pa_next != NULL)
+        _num *pn_next = &pa->num;
+        while (pn_next != NULL)
         {
             for (int i = 0; i < CHAR_NUM; i++)
-                pa_next->cBin[i] = ~(pa_next->cBin[i]);
-            pa_next = pa_next->pnext;
+                pn_next->bits[i] = ~(pn_next->bits[i]);
+            pn_next = pn_next->pnext;
         }
         _bin_add(pa, pOne, pa);
         _bin_free(pOne);
     }
 }
 
-bool _bin_discard_first_digit(_bin *pa)
+bool _num_discard_first_digit(_num *pn)
 {
-    if (pa != NULL)
+    if (pn != NULL)
     {
-        if (pa->pnext == NULL)
+        if (pn->pnext == NULL)
             return true;
-        if (_bin_discard_first_digit(pa->pnext))
+        if (_num_discard_first_digit(pn->pnext))
         {
-            _bin_free(pa->pnext);
-            pa->pnext = NULL;
+            _num_free(pn->pnext);
+            pn->pnext = NULL;
         }
     }
     return false;
 }
 
-void _bin_extend_if_required(_bin *pa, _bin *pb)
+void _num_extend_if_required(_num *pn, _num *pm)
 {
-    if (pa == NULL)
+    if (pn == NULL)
         return;
-    if (pa->pnext != NULL && pb->pnext == NULL)
-        pb->pnext = _bin_create();
-    _bin_extend_if_required(pa->pnext, pb->pnext);
+    if (pn->pnext != NULL && pm->pnext == NULL)
+        pm->pnext = _num_create();
+    _num_extend_if_required(pn->pnext, pm->pnext);
 }
 
 void _bin_sub(_bin *pa, _bin *pb, _bin *pr)
@@ -663,18 +701,18 @@ void _bin_sub(_bin *pa, _bin *pb, _bin *pr)
         }
         else
         {
-            _bin_extend_if_required(px, py);
+            _num_extend_if_required(&px->num, &py->num);
             bool sig = bin_eq(px, py) >= 0;
             _bin_2complement(py);
             _bin_add(px, py, pr);
             // assume the first block is 1 so free it
-            _bin_discard_first_digit(pr);
+            _num_discard_first_digit(&pr->num);
             if (!sig)
             {
                 pr->sig = false;
                 _bin_un2complement(pr);
             }
-            _bin_clean(pr);
+            _num_clean(&pr->num);
         }
         _bin_free(px);
         _bin_free(py);
@@ -709,35 +747,26 @@ void bin_printb(_bin *pbin)
     printf("%10s\n", szStr+i);
 }
 
-void _bin_printx(_bin *pa)
-{
-    if (pa != NULL)
-    {
-        _bin_printx(pa->pnext);
-        char szStr[65] = {0};
-        bin2xstr((Bin)pa, szStr, 64);
-        printf("%s", szStr);
-    }
-}
-
 void bin_printx(_bin *pa)
 {
-    _bin_printx(pa);
+    char szStr[257] = {0};
+    bin2xstr((Bin)pa, szStr, 256);
     printf("\n");
 }
 
 void bin2bstr(Bin bin, char *szStr, size_t iLen)
 {
-    _bin *pbin = (_bin*)bin;
-    if (pbin != NULL && szStr != NULL && iLen > 0)
+    _bin *pa = (_bin*)bin;
+    if (pa != NULL && szStr != NULL && iLen > 0)
     {
+        _num *pn = &pa->num;
         for (int i = BIN_LEN - 1, j = 0; i >= 0; i--, j++)
         {
             int iIndex = i / CHAR_BITS;
             int iBitOffset = CHAR_BITS - (i % CHAR_BITS) - 1;
 
             if (j < iLen)
-                szStr[j] = (pbin->cBin[iIndex] & (1 << iBitOffset)) ? '1' : '0';
+                szStr[j] = (pn->bits[iIndex] & (1 << iBitOffset)) ? '1' : '0';
         }
     }
     _bin_reverse_str(szStr, iLen < BIN_LEN ? iLen : BIN_LEN);
@@ -745,24 +774,25 @@ void bin2bstr(Bin bin, char *szStr, size_t iLen)
 
 void bin2xstr(Bin bin, char *szStr, size_t iLen)
 {
-    _bin *pa_next = (_bin*)bin;
-    if (pa_next != NULL && szStr != NULL && iLen > 0)
+    _bin *pa = (_bin*)bin;
+    if (pa != NULL && szStr != NULL && iLen > 0)
     {
+        _num *pn_next = &pa->num;
         //TODO: remove
         for (int i = 0; i < iLen; szStr[i++] = '0');
 
         int j = 0;
-        while (pa_next != NULL && j < iLen) 
+        while (pn_next != NULL && j < iLen) 
         {
             for (int i = CHAR_NUM-1; i >= 0 && j < iLen; i--, j+=2)
             {
-                char ch1 = _ch2x(pa_next->cBin[i] >> 4);
-                char ch2 = _ch2x(pa_next->cBin[i] & 0x0f);
+                char ch1 = _ch2x(pn_next->bits[i] >> 4);
+                char ch2 = _ch2x(pn_next->bits[i] & 0x0f);
                 szStr[j] = ch2;
                 if (j+1 < iLen)
                     szStr[j+1] = ch1;
             }
-            pa_next = pa_next->pnext;
+            pn_next = pn_next->pnext;
         }
         _bin_reverse_str(szStr, iLen);
     }
