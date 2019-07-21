@@ -25,7 +25,7 @@ START_TEST(test_bin_add)
     Bin b2 = bin_create("x162e"); // 5678
     Bin ret = bin_add(b1, b2);
     bin2xstr(ret, szRet, 64);
-    ck_assert_msg(strcmp(szRet, "0000000000000000000000000000000000000000000000000000000000001b00") == 0, "bin add result is wrong");
+    ck_assert_msg(strcmp(szRet, "1b00") == 0, "bin add result is wrong");
     bin_free(b1);
     bin_free(b2);
     bin_free(ret);
@@ -40,7 +40,7 @@ START_TEST(test_bin_add_big)
     Bin b2 = bin_create("x2dcaec4c2df4268937664439ba2f162fc2d76998cbaccff196ce3f0ad3"); // 1234567890123456789012345678901234567890123456789012345678901234567891
     Bin ret = bin_add(b1, b2);
     bin2xstr(ret, szRet, 64);
-    ck_assert_msg(strcmp(szRet, "0000005b95d8985be84d126ecc8873745e2c5f85aed33197599fe32d9c7e15a5") == 0, "bin add result is wrong");
+    ck_assert_msg(strcmp(szRet, "5b95d8985be84d126ecc8873745e2c5f85aed33197599fe32d9c7e15a5") == 0, "bin add result is wrong");
     bin_free(b1);
     bin_free(b2);
     bin_free(ret);
@@ -100,7 +100,7 @@ START_TEST(test_bin_mul)
     Bin b2 = bin_create("xd");   // 13
     Bin br = bin_mul(b1, b2);
     bin2xstr(br, szRet, 64);
-    ck_assert_msg(strcmp(szRet, "000000000000000000000000000000000000000000000000000000000000063f") == 0, "mul result is wrong");
+    ck_assert_msg(strcmp(szRet, "63f") == 0, "mul result is wrong");
     bin_free(b1);
     bin_free(b2);
     bin_free(br);
@@ -115,7 +115,7 @@ START_TEST(test_bin_mul_big)
     Bin b2 = bin_create("x2dcaec4c2df4268937664439ba2f162fc2d76998cbaccff196ce3f0ad2");   // 1234567890123456789012345678901234567890123456789012345678901234567890
     Bin br = bin_mul(b1, b2);
     bin2xstr(br, szRet, 128);
-    ck_assert_msg(strcmp(szRet, "0000000000000830f7ec8a7ce63e8648ff6321e9e69637ef2d74cc0afbc5cf00526149ba9e864644df1a6622d80ee7e4a714e5cccc1c12b2ba0597084bd11444") == 0, "mul result is wrong");
+    ck_assert_msg(strcmp(szRet, "830f7ec8a7ce63e8648ff6321e9e69637ef2d74cc0afbc5cf00526149ba9e864644df1a6622d80ee7e4a714e5cccc1c12b2ba0597084bd11444") == 0, "mul result is wrong");
     bin_free(b1);
     bin_free(b2);
     bin_free(br);
@@ -130,7 +130,7 @@ START_TEST(test_bin_sub)
     Bin b2 = bin_create("x2b");  // 43
     Bin br = bin_sub(b1, b2);
     bin2xstr(br, szRet, 64);
-    ck_assert_msg(strcmp(szRet, "000000000000000000000000000000000000000000000000000000000000000d") == 0, "sub result is wrong");
+    ck_assert_msg(strcmp(szRet, "d") == 0, "sub result is wrong");
     bin_free(b1);
     bin_free(b2);
     bin_free(br);
@@ -145,7 +145,7 @@ START_TEST(test_bin_sub_big)
     Bin b2 = bin_create("x2dcaec4c2df4268937664439ba2f162fc2d76998cbaccff196ce3f0ad2");   // 1234567890123456789012345678901234567890123456789012345678901234567890
     Bin br = bin_sub(b1, b2);
     bin2xstr(br, szRet, 64);
-    ck_assert_msg(strcmp(szRet, "000001408c764d4380d13cde08af9acf56f1553781074093284e764083877418") == 0, "sub result is wrong");
+    ck_assert_msg(strcmp(szRet, "1408c764d4380d13cde08af9acf56f1553781074093284e764083877418") == 0, "sub result is wrong");
     bin_free(b1);
     bin_free(b2);
     bin_free(br);
@@ -190,7 +190,7 @@ START_TEST(test_bin_div)
     Bin b2 = bin_create("x7b");   // 123
     Bin br = bin_div(b1, b2);
     bin2xstr(br, szRet, 64);
-    ck_assert_msg(strcmp(szRet, "000000000000000000000000000000000000000000000000000000000000000d") == 0, "sub result is wrong");
+    ck_assert_msg(strcmp(szRet, "d") == 0, "sub result is wrong");
     bin_free(b1);
     bin_free(b2);
     bin_free(br);
@@ -205,7 +205,7 @@ START_TEST(test_bin_div_big)
     Bin b2 = bin_create("x18ee90ff6c373e0ee4e3f0ad2");   // 123456789012345678901234567890
     Bin br = bin_div(b1, b2);
     bin2xstr(br, szRet, 64);
-    ck_assert_msg(strcmp(szRet, "000000000000000000000000000000000000000c7748819dffb62438d1c67eea") == 0, "sub result is wrong");
+    ck_assert_msg(strcmp(szRet, "c7748819dffb62438d1c67eea") == 0, "sub result is wrong");
     bin_free(b1);
     bin_free(b2);
     bin_free(br);
@@ -220,7 +220,7 @@ START_TEST(test_bin_mod)
     Bin b2 = bin_create("x7b");    // 123
     Bin br = bin_mod(b1, b2);
     bin2xstr(br, szRet, 64);
-    ck_assert_msg(strcmp(szRet, "000000000000000000000000000000000000000000000000000000000000007a") == 0, "sub result is wrong");
+    ck_assert_msg(strcmp(szRet, "7a") == 0, "sub result is wrong");
     bin_free(b1);
     bin_free(b2);
     bin_free(br);
@@ -237,7 +237,7 @@ START_TEST(test_bin_mod_neg)
     Bin m = bin_create("x5");
     Bin br = bin_mod(b3, m);
     bin2xstr(br, szRet, 64);
-    ck_assert_msg(strcmp(szRet, "0000000000000000000000000000000000000000000000000000000000000003") == 0, "sub result is wrong");
+    ck_assert_msg(strcmp(szRet, "3") == 0, "sub result is wrong");
     bin_free(b1);
     bin_free(b2);
     bin_free(b3);
@@ -254,7 +254,7 @@ START_TEST(test_bin_mod_big)
     Bin b2 = bin_create("x18ee90ff6c373e0ee4e3f0ad2");   // 123456789012345678901234567890
     Bin br = bin_mod(b1, b2);
     bin2xstr(br, szRet, 64);
-    ck_assert_msg(strcmp(szRet, "00000000000000000000000000000000000000018ee90ff6c373e0ee4e3f0ad1") == 0, "sub result is wrong");
+    ck_assert_msg(strcmp(szRet, "18ee90ff6c373e0ee4e3f0ad1") == 0, "sub result is wrong");
     bin_free(b1);
     bin_free(b2);
     bin_free(br);

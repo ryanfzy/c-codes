@@ -772,6 +772,19 @@ void bin2bstr(Bin bin, char *szStr, size_t iLen)
     _bin_reverse_str(szStr, iLen < BIN_LEN ? iLen : BIN_LEN);
 }
 
+void _remove_leading_zeros(char *str, size_t isize)
+{
+    if (str != NULL && isize > 0)
+    {
+        int istart = 0;
+        for (; str[istart] == '0'; istart++);
+        int iend = isize - istart;
+        for (int i = 0; istart < isize; istart++, i++)
+            str[i] = str[istart];
+        str[iend] = '\0';
+    }
+}
+
 void bin2xstr(Bin bin, char *szStr, size_t iLen)
 {
     _bin *pa = (_bin*)bin;
@@ -795,6 +808,7 @@ void bin2xstr(Bin bin, char *szStr, size_t iLen)
             pn_next = pn_next->pnext;
         }
         _bin_reverse_str(szStr, iLen);
+        _remove_leading_zeros(szStr, iLen);
     }
 }
 
