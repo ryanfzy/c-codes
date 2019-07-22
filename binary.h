@@ -14,6 +14,7 @@ void bin_free(Bin pbin);
 
 void bin2bstr(Bin bin, char *szStr, size_t iLen);
 void bin2xstr(Bin bin, char *szStr, size_t iLen);
+void bin2xstr2(Bin bin, char *szStr, size_t iLen);
 
 Bin bin_add(Bin a, Bin b);
 Bin bin_sub(Bin a, Bin b);

@@ -127,8 +127,19 @@ Bin bin_create2(const char *pstr, unsigned int isize)
 {
     if (pstr != NULL)
     {
+        bool sig = true;
+        if (pstr[0] == '-')
+        {
+            sig = false;
+            pstr++;
+            isize--;
+        }
         if (pstr[0] == 'x')
-            return (Bin)_bin_create_x(pstr+1, isize-1);
+        {
+            _bin *pa = _bin_create_x(pstr+1, isize-1);
+            pa->sig = sig;
+            return (Bin)pa;
+        }
     }
     return 0;
 }
@@ -427,7 +438,7 @@ void _bin_mul(_bin *pa, _bin *pb, _bin *pr)
                 bin_lshift(px, 1);
             }
         }
-        pr->sig = px->sig && py->sig;
+        pr->sig = (pa->sig == pb->sig);
         _bin_free(px);
         _bin_free(py);
     }
@@ -583,10 +594,12 @@ void _bin_div(_bin *pa, _bin *pb, _bin *pr, _bin *pm)
     if (pa != NULL && pb != NULL && pr != NULL)
     {
         _bin *px = _bin_create3(pa);
+        _bin *pb2 = _bin_create3(pb);
         _bin *py = _bin_align(px, pb);
         px->sig = true;
+        pb2->sig = true;
         py->sig = true;
-        while (bin_eq(py, pb) >= 0)
+        while (bin_eq(py, pb2) >= 0)
         {
             bin_lshift(pr, 1);
             if (bin_eq(px, py) >= 0)
@@ -595,9 +608,8 @@ void _bin_div(_bin *pa, _bin *pb, _bin *pr, _bin *pm)
                 pr->num.bits[CHAR_NUM-1] |= 0x01;
             }
             bin_rshift(py, 1);
-            //bin_printx(px);
         }
-        pr->sig = pa->sig == pb->sig;
+        pr->sig = (pa->sig == pb->sig);
         if (pm != NULL)
         {
             if (!pa->sig)
@@ -609,6 +621,7 @@ void _bin_div(_bin *pa, _bin *pb, _bin *pr, _bin *pm)
             _bin_init2(pm, px);
         }
         _bin_free(py);
+        _bin_free(pb2);
         _bin_free(px);
     }
 }
@@ -696,6 +709,7 @@ void _bin_sub(_bin *pa, _bin *pb, _bin *pr)
         }
         else if (!px->sig && !py->sig)
         {
+            px->sig = true;
             py->sig = true;
             _bin_sub(py, px, pr);
         }
@@ -709,8 +723,8 @@ void _bin_sub(_bin *pa, _bin *pb, _bin *pr)
             _num_discard_first_digit(&pr->num);
             if (!sig)
             {
-                pr->sig = false;
                 _bin_un2complement(pr);
+                pr->sig = false;
             }
             _num_clean(&pr->num);
         }
@@ -749,9 +763,9 @@ void bin_printb(_bin *pbin)
 
 void bin_printx(_bin *pa)
 {
-    char szStr[257] = {0};
-    bin2xstr((Bin)pa, szStr, 256);
-    printf("\n");
+    char szStr[258] = {0};
+    bin2xstr2((Bin)pa, szStr, 257);
+    printf("%s\n", szStr);
 }
 
 void bin2bstr(Bin bin, char *szStr, size_t iLen)
@@ -809,6 +823,21 @@ void bin2xstr(Bin bin, char *szStr, size_t iLen)
         }
         _bin_reverse_str(szStr, iLen);
         _remove_leading_zeros(szStr, iLen);
+    }
+}
+
+void bin2xstr2(Bin bin, char *str, size_t len)
+{
+    _bin *pa = (_bin*)bin;
+    if (pa != NULL && str != NULL && len > 0)
+    {
+        if (pa->sig)
+            str[0] = '+';
+        else
+            str[0] = '-';
+        str++;
+        len--;
+        bin2xstr(bin, str, len);
     }
 }
 

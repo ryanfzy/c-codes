@@ -33,6 +33,51 @@ START_TEST(test_bin_add)
 }
 END_TEST
 
+START_TEST(test_bin_add_neg)
+{
+    char szRet[65] = {0};
+    Bin b1 = bin_create("x4d2");  // 1234
+    Bin b2 = bin_create("-x162e"); // 5678
+    Bin ret = bin_add(b1, b2);
+    bin2xstr2(ret, szRet, 64);
+    ck_assert_msg(strcmp(szRet, "-115c") == 0, "bin add result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(ret);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
+START_TEST(test_bin_neg_add)
+{
+    char szRet[65] = {0};
+    Bin b1 = bin_create("-x4d2");  // 1234
+    Bin b2 = bin_create("x162e"); // 5678
+    Bin ret = bin_add(b1, b2);
+    bin2xstr2(ret, szRet, 64);
+    ck_assert_msg(strcmp(szRet, "+115c") == 0, "bin add result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(ret);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
+START_TEST(test_bin_neg_add_neg)
+{
+    char szRet[65] = {0};
+    Bin b1 = bin_create("-x4d2");  // 1234
+    Bin b2 = bin_create("-x162e"); // 5678
+    Bin ret = bin_add(b1, b2);
+    bin2xstr2(ret, szRet, 64);
+    ck_assert_msg(strcmp(szRet, "-1b00") == 0, "bin add result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(ret);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
 START_TEST(test_bin_add_big)
 {
     char szRet[65] = {0};
@@ -108,6 +153,51 @@ START_TEST(test_bin_mul)
 }
 END_TEST
 
+START_TEST(test_bin_mul_neg)
+{
+    char szRet[65] = {0};
+    Bin b1 = bin_create("x7b");  // 123
+    Bin b2 = bin_create("-xd");   // 13
+    Bin br = bin_mul(b1, b2);
+    bin2xstr2(br, szRet, 64);
+    ck_assert_msg(strcmp(szRet, "-63f") == 0, "mul result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
+START_TEST(test_bin_neg_mul)
+{
+    char szRet[65] = {0};
+    Bin b1 = bin_create("-x7b");  // 123
+    Bin b2 = bin_create("xd");   // 13
+    Bin br = bin_mul(b1, b2);
+    bin2xstr2(br, szRet, 64);
+    ck_assert_msg(strcmp(szRet, "-63f") == 0, "mul result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
+START_TEST(test_bin_neg_mul_neg)
+{
+    char szRet[65] = {0};
+    Bin b1 = bin_create("-x7b");  // 123
+    Bin b2 = bin_create("-xd");   // 13
+    Bin br = bin_mul(b1, b2);
+    bin2xstr2(br, szRet, 64);
+    ck_assert_msg(strcmp(szRet, "+63f") == 0, "mul result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
 START_TEST(test_bin_mul_big)
 {
     char szRet[129] = {0};
@@ -131,6 +221,51 @@ START_TEST(test_bin_sub)
     Bin br = bin_sub(b1, b2);
     bin2xstr(br, szRet, 64);
     ck_assert_msg(strcmp(szRet, "d") == 0, "sub result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
+START_TEST(test_bin_sub_neg)
+{
+    char szRet[65] = {0};
+    Bin b1 = bin_create("x38");  // 56
+    Bin b2 = bin_create("-x2b");  // 43
+    Bin br = bin_sub(b1, b2);
+    bin2xstr2(br, szRet, 64);
+    ck_assert_msg(strcmp(szRet, "+63") == 0, "sub result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
+START_TEST(test_bin_neg_sub)
+{
+    char szRet[65] = {0};
+    Bin b1 = bin_create("-x38");  // 56
+    Bin b2 = bin_create("x2b");  // 43
+    Bin br = bin_sub(b1, b2);
+    bin2xstr2(br, szRet, 64);
+    ck_assert_msg(strcmp(szRet, "-63") == 0, "sub result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
+START_TEST(test_bin_neg_sub_neg)
+{
+    char szRet[65] = {0};
+    Bin b1 = bin_create("-x38");  // 56
+    Bin b2 = bin_create("-x2b");  // 43
+    Bin br = bin_sub(b1, b2);
+    bin2xstr2(br, szRet, 64);
+    ck_assert_msg(strcmp(szRet, "-d") == 0, "sub result is wrong");
     bin_free(b1);
     bin_free(b2);
     bin_free(br);
@@ -191,6 +326,51 @@ START_TEST(test_bin_div)
     Bin br = bin_div(b1, b2);
     bin2xstr(br, szRet, 64);
     ck_assert_msg(strcmp(szRet, "d") == 0, "sub result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
+START_TEST(test_bin_div_neg)
+{
+    char szRet[65] = {0};
+    Bin b1 = bin_create("x63f");  // 1599
+    Bin b2 = bin_create("-x7b");   // 123
+    Bin br = bin_div(b1, b2);
+    bin2xstr2(br, szRet, 64);
+    ck_assert_msg(strcmp(szRet, "-d") == 0, "sub result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
+START_TEST(test_bin_neg_div)
+{
+    char szRet[65] = {0};
+    Bin b1 = bin_create("-x63f");  // 1599
+    Bin b2 = bin_create("x7b");   // 123
+    Bin br = bin_div(b1, b2);
+    bin2xstr2(br, szRet, 64);
+    ck_assert_msg(strcmp(szRet, "-d") == 0, "sub result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
+START_TEST(test_bin_neg_div_neg)
+{
+    char szRet[65] = {0};
+    Bin b1 = bin_create("-x63f");  // 1599
+    Bin b2 = bin_create("-x7b");   // 123
+    Bin br = bin_div(b1, b2);
+    bin2xstr2(br, szRet, 64);
+    ck_assert_msg(strcmp(szRet, "+d") == 0, "sub result is wrong");
     bin_free(b1);
     bin_free(b2);
     bin_free(br);
@@ -383,17 +563,29 @@ Suite* make_add_suit(void)
     TCase *tc_stack = tcase_create("number");
     //tcase_add_test(tc_stack, test_int2str);
     tcase_add_test(tc_stack, test_bin_add);
+    tcase_add_test(tc_stack, test_bin_add_neg);
+    tcase_add_test(tc_stack, test_bin_neg_add);
+    tcase_add_test(tc_stack, test_bin_neg_add_neg);
     tcase_add_test(tc_stack, test_bin_add_big);
     tcase_add_test(tc_stack, test_bin_add_big_big);
     tcase_add_test(tc_stack, test_bin_add_big_big_to_big);
     tcase_add_test(tc_stack, test_bin_add_big_to_big_big);
     tcase_add_test(tc_stack, test_bin_mul);
+    tcase_add_test(tc_stack, test_bin_mul_neg);
+    tcase_add_test(tc_stack, test_bin_neg_mul);
+    tcase_add_test(tc_stack, test_bin_neg_mul_neg);
     tcase_add_test(tc_stack, test_bin_mul_big);
     tcase_add_test(tc_stack, test_bin_sub);
+    tcase_add_test(tc_stack, test_bin_sub_neg);
+    tcase_add_test(tc_stack, test_bin_neg_sub);
+    tcase_add_test(tc_stack, test_bin_neg_sub_neg);
     tcase_add_test(tc_stack, test_bin_sub_big);
     tcase_add_test(tc_stack, test_bin_sub_big_big);
     tcase_add_test(tc_stack, test_bin_sub_big_big_to_big);
     tcase_add_test(tc_stack, test_bin_div);
+    tcase_add_test(tc_stack, test_bin_div_neg);
+    tcase_add_test(tc_stack, test_bin_neg_div);
+    tcase_add_test(tc_stack, test_bin_neg_div_neg);
     tcase_add_test(tc_stack, test_bin_div_big);
     tcase_add_test(tc_stack, test_bin_mod);
     tcase_add_test(tc_stack, test_bin_mod_neg);
