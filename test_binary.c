@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <check.h>
+#include <limits.h>
 #include "binary.h"
 #include "mem_d.h"
 
@@ -273,6 +274,21 @@ START_TEST(test_bin_neg_sub_neg)
 }
 END_TEST
 
+START_TEST(test_bin_zero_sub)
+{
+    char szRet[65] = {0};
+    Bin b1 = bin_create_uint(0);
+    Bin b2 = bin_create_uint(1);
+    Bin br = bin_sub(b1, b2);
+    bin2xstr2(br, szRet, 64);
+    ck_assert_msg(strcmp(szRet, "-1") == 0, "sub result is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
 START_TEST(test_bin_sub_big)
 {
     char szRet[65] = {0};
@@ -329,6 +345,25 @@ START_TEST(test_bin_div)
     bin_free(b1);
     bin_free(b2);
     bin_free(br);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
+START_TEST(test_bin_div_rem)
+{
+    char szRet[65] = {0};
+    Bin b1 = bin_create_uint(17);
+    Bin b2 = bin_create_uint(14);
+    Bin rem = 0;
+    Bin br = bin_div_rem(b1, b2, &rem);
+    bin2xstr(br, szRet, 64);
+    ck_assert_msg(strcmp(szRet, "1") == 0, "div result is wrong");
+    bin2xstr(rem, szRet, 64);
+    ck_assert_msg(strcmp(szRet, "3") == 0, "div remainder is wrong");
+    bin_free(b1);
+    bin_free(b2);
+    bin_free(br);
+    bin_free(rem);
     ck_assert_msg(check_mem(), "memory leak");
 }
 END_TEST
@@ -468,6 +503,39 @@ START_TEST(test_bin_create_big)
 }
 END_TEST
 
+START_TEST(test_bin_create_uint1)
+{
+    char szRet[129] = {0};
+    Bin pa = bin_create_uint(5);
+    bin2xstr2(pa, szRet, 128);
+    ck_assert_msg(strcmp(szRet, "+5") == 0, "create uint 5 is wrong");
+    bin_free(pa);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
+START_TEST(test_bin_create_uint2)
+{
+    char szRet[129] = {0};
+    Bin pa = bin_create_uint(123456);
+    bin2xstr2(pa, szRet, 128);
+    ck_assert_msg(strcmp(szRet, "+1e240") == 0, "create uint 123456 is wrong");
+    bin_free(pa);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
+START_TEST(test_bin_create_uint_max)
+{
+    char szRet[129] = {0};
+    Bin pa = bin_create_uint(UINT_MAX);
+    bin2xstr2(pa, szRet, 128);
+    ck_assert_msg(strcmp(szRet, "+ffffffff") == 0, "create max uint is wrong");
+    bin_free(pa);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
 /*
 START_TEST(test_bin_float2bin)
 {
@@ -579,10 +647,12 @@ Suite* make_add_suit(void)
     tcase_add_test(tc_stack, test_bin_sub_neg);
     tcase_add_test(tc_stack, test_bin_neg_sub);
     tcase_add_test(tc_stack, test_bin_neg_sub_neg);
+    tcase_add_test(tc_stack, test_bin_zero_sub);
     tcase_add_test(tc_stack, test_bin_sub_big);
     tcase_add_test(tc_stack, test_bin_sub_big_big);
     tcase_add_test(tc_stack, test_bin_sub_big_big_to_big);
     tcase_add_test(tc_stack, test_bin_div);
+    tcase_add_test(tc_stack, test_bin_div_rem);
     tcase_add_test(tc_stack, test_bin_div_neg);
     tcase_add_test(tc_stack, test_bin_neg_div);
     tcase_add_test(tc_stack, test_bin_neg_div_neg);
@@ -592,6 +662,9 @@ Suite* make_add_suit(void)
     tcase_add_test(tc_stack, test_bin_mod_big);
     tcase_add_test(tc_stack, test_bin_mod_big_big);
     tcase_add_test(tc_stack, test_bin_create_big);
+    tcase_add_test(tc_stack, test_bin_create_uint1);
+    tcase_add_test(tc_stack, test_bin_create_uint2);
+    tcase_add_test(tc_stack, test_bin_create_uint_max);
     //tcase_add_test(tc_stack, test_bin_float2bin);
     //tcase_add_test(tc_stack, test_bin_lshift);
     //tcase_add_test(tc_stack, test_bin_2bstr);

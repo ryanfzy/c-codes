@@ -2,7 +2,7 @@
 #include "binary.h"
 #include "mem_d.h"
 
-#define _MALLOC malloc_d
+#define _MALLOC(x) malloc_d(x, __FILE__, __LINE__)
 #define _FREE free_d
 
 #define BIN_LEN 256
@@ -30,6 +30,23 @@ void _bin_div(_bin*, _bin*, _bin*, _bin*);
 void bin_printb(_bin*);
 void bin_printx(_bin*);
 void _bin_un2complement(_bin*);
+bool _num_is_zero(_num *pn);
+void _num_free(_num *pn);
+
+bool bin_is_zero(Bin bin)
+{
+    _bin *pa = (_bin*)bin;
+    if (pa != NULL)
+        return _num_is_zero(&pa->num);
+    return true;
+}
+
+void bin_set_sig(Bin bin, bool sig)
+{
+    _bin *pa = (_bin*)bin;
+    if (pa != NULL)
+        pa->sig = sig;
+}
 
 static char _x2ch(char ch)
 {
@@ -179,6 +196,18 @@ Bin bin_create3(Bin a)
     return 0;
 }
 
+Bin bin_create_uint(unsigned int val)
+{
+    _bin *pa = _bin_create();
+    for (int i = CHAR_NUM-1; i >= 0 && val > 0; i--)
+    {
+        char ch = val & 0xff;
+        pa->num.bits[i] = ch;
+        val >>= 8;
+    }
+    return (Bin)pa;
+}
+
 void _num_free(_num *pn)
 {
     if (pn != NULL)
@@ -188,11 +217,17 @@ void _num_free(_num *pn)
     }
 }
 
+void _bin_destroy(_bin *pa)
+{
+    if (pa != NULL)
+        _num_free(pa->num.pnext);
+}
+
 void _bin_free(_bin *pa)
 {
     if (pa != NULL)
     {
-        _num_free(pa->num.pnext);
+        _bin_destroy(pa);
         _FREE(pa);
     }
 }
@@ -261,7 +296,7 @@ bool bin_init_istr(_bin *pbin, char *szStr, size_t iLen)
 }
 */
 
-int _num_is_zero(_num *pn)
+bool _num_is_zero(_num *pn)
 {
     if (pn != NULL)
     {
@@ -324,15 +359,10 @@ void bin_add2(Bin a, Bin b, Bin *ppr)
 {
     _bin *pa = (_bin*)a;
     _bin *pb = (_bin*)b;
-    _bin *pr = (_bin*)(*ppr);
-    if (pr == NULL)
-    {
-        pr = _bin_create();
-        *ppr = (Bin)pr;
-    }
-    else
-        bin_init(pr);
+    _bin *pr = _bin_create();
     _bin_add(pa, pb, pr);
+    bin_free(*ppr);
+    *ppr = (Bin)pr;
 }
 
 void _bin_add(_bin *pa, _bin *pb, _bin *pr)
@@ -410,15 +440,10 @@ void bin_mul2(Bin a, Bin b, Bin *ppr)
 {
     _bin *pa = (_bin*)a;
     _bin *pb = (_bin*)b;
-    _bin *pr = (_bin*)(*ppr);
-    if (pr == NULL)
-    {
-        pr = (_bin*)bin_create("x0");
-        *ppr = (Bin)pr;
-    }
-    else
-        bin_init(pr);
+    _bin *pr = _bin_create();
     _bin_mul(pa, pb, pr);
+    bin_free(*ppr);
+    *ppr = (Bin)pr;
 }
 
 void _bin_mul(_bin *pa, _bin *pb, _bin *pr)
@@ -466,7 +491,7 @@ int _num_eq(_num *pn, _num *pm)
     return ret;
 }
 
-int bin_eq(_bin *pa, _bin *pb)
+int _bin_eq(_bin *pa, _bin *pb)
 {
     if (pa == NULL && pb == NULL)
         return 0;
@@ -482,6 +507,17 @@ int bin_eq(_bin *pa, _bin *pb)
     if (!pa->sig && !pb->sig)
         ret = (ret == 1 ? -1 : (ret == -1 ? 1 : ret));
     return ret;
+}
+
+int bin_eq(Bin a, Bin b)
+{
+    _bin *pa = (_bin*)a;
+    _bin *pb = (_bin*)b;
+    if (pa != NULL && pb != NULL)
+    {
+        return _bin_eq(pa, pb);
+    }
+    return 0;
 }
 
 int _bin_get_startIndex(_bin *pa)
@@ -537,17 +573,11 @@ void bin_mod2(Bin a, Bin b, Bin *ppm)
     _bin *pb = (_bin*)b;
     _bin r;
     bin_init(&r);
-    _bin *pm = (_bin*)(*ppm);
-    if (pm == NULL)
-    {
-        pm = (_bin*)bin_create("x0");
-        *ppm = (Bin)pm;
-    }
-    else
-    {
-        bin_init(pm);
-    }
+    _bin *pm = _bin_create();
     _bin_div(pa, pb, &r, pm);
+    bin_free(*ppm);
+    *ppm = (Bin)pm;
+    _bin_destroy(&r);
 }
 
 Bin bin_div(Bin a, Bin b)
@@ -559,17 +589,23 @@ Bin bin_div(Bin a, Bin b)
 
 void bin_div2(Bin a, Bin b, Bin *ppr)
 {
+    Bin rem = 0;
+    Bin ret = bin_div_rem(a, b, &rem);
+    bin_free(*ppr);
+    *ppr = (Bin)ret;
+    bin_free(rem);
+}
+
+Bin bin_div_rem(Bin a, Bin b, Bin *pprem)
+{
     _bin *pa = (_bin*)a;
     _bin *pb = (_bin*)b;
-    _bin *pr = (_bin*)(*ppr);
-    if (pr == NULL)
-    {
-        pr = (_bin*)bin_create("x0");
-        *ppr = (Bin)pr;
-    }
-    else
-        bin_init(pr);
-    _bin_div(pa, pb, pr, NULL);
+    _bin *pret = _bin_create();
+    _bin *prem = _bin_create();
+    _bin_div(pa, pb, pret, prem);
+    bin_free(*pprem);
+    *pprem = (Bin)prem;
+    return (Bin)pret;
 }
 
 void _bin_un2complement(_bin *pa)
@@ -599,10 +635,10 @@ void _bin_div(_bin *pa, _bin *pb, _bin *pr, _bin *pm)
         px->sig = true;
         pb2->sig = true;
         py->sig = true;
-        while (bin_eq(py, pb2) >= 0)
+        while (_bin_eq(py, pb2) >= 0)
         {
             bin_lshift(pr, 1);
-            if (bin_eq(px, py) >= 0)
+            if (_bin_eq(px, py) >= 0)
             {
                 _bin_sub(px, py, px);
                 pr->num.bits[CHAR_NUM-1] |= 0x01;
@@ -637,15 +673,10 @@ void bin_sub2(Bin a, Bin b, Bin *ppr)
 {
     _bin *pa = (_bin*)a;
     _bin *pb = (_bin*)b;
-    _bin *pr = (_bin*)(*ppr);
-    if (pr == NULL)
-    {
-        pr = (_bin*)bin_create("x0");
-        *ppr = (Bin)pr;
-    }
-    else
-        bin_init(pr);
+    _bin *pr = _bin_create();
     _bin_sub(pa, pb, pr);
+    bin_free(*ppr);
+    *ppr = (Bin)pr;
 }
 
 void _bin_2complement(_bin *pa)
@@ -716,7 +747,7 @@ void _bin_sub(_bin *pa, _bin *pb, _bin *pr)
         else
         {
             _num_extend_if_required(&px->num, &py->num);
-            bool sig = bin_eq(px, py) >= 0;
+            bool sig = _bin_eq(px, py) >= 0;
             _bin_2complement(py);
             _bin_add(px, py, pr);
             // assume the first block is 1 so free it

@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-void* malloc_d(size_t size);
+void* malloc_d(size_t size, char *pfile, int fnum);
 void free_d(void *ptr);
 
 bool check_mem();
