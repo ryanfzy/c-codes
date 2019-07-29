@@ -33,5 +33,6 @@ void bin_mod2(Bin a, Bin b, Bin *pr);
 
 bool bin_is_zero(Bin a);
 void bin_set_sig(Bin a, bool sig);
+bool bin_get_sig(Bin a);
 
 #endif

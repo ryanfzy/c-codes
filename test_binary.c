@@ -446,17 +446,13 @@ END_TEST
 START_TEST(test_bin_mod_neg)
 {
     char szRet[65] = {0};
-    Bin b1 = bin_create("x1");  // 39605
-    Bin b2 = bin_create("x12");    // 123
-    Bin b3 = bin_sub(b1, b2);
-    Bin m = bin_create("x5");
-    Bin br = bin_mod(b3, m);
+    Bin b1 = bin_create("-x1c");  // -28
+    Bin b2 = bin_create("x11");    // 17
+    Bin br = bin_mod(b1, b2);
     bin2xstr(br, szRet, 64);
-    ck_assert_msg(strcmp(szRet, "3") == 0, "sub result is wrong");
+    ck_assert_msg(strcmp(szRet, "6") == 0, "sub result is wrong");
     bin_free(b1);
     bin_free(b2);
-    bin_free(b3);
-    bin_free(m);
     bin_free(br);
     ck_assert_msg(check_mem(), "memory leak");
 }

@@ -48,6 +48,14 @@ void bin_set_sig(Bin bin, bool sig)
         pa->sig = sig;
 }
 
+bool bin_get_sig(Bin a)
+{
+    _bin *pa = (_bin*)a;
+    if (pa != NULL)
+        return pa->sig;
+    return true;
+}
+
 static char _x2ch(char ch)
 {
     if (ch >= '0' && ch <= '9')
