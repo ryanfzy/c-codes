@@ -201,15 +201,29 @@ END_TEST
 
 START_TEST(test_bin_mul_big)
 {
-    char szRet[129] = {0};
+    char szRet[128] = {0};
     Bin b1 = bin_create("x2dcaec4c2df4268937664439ba2f162fc2d76998cbaccff196ce3f0ad2");   // 1234567890123456789012345678901234567890123456789012345678901234567890
     Bin b2 = bin_create("x2dcaec4c2df4268937664439ba2f162fc2d76998cbaccff196ce3f0ad2");   // 1234567890123456789012345678901234567890123456789012345678901234567890
     Bin br = bin_mul(b1, b2);
-    bin2xstr(br, szRet, 128);
+    bin2xstr(br, szRet, 127);
     ck_assert_msg(strcmp(szRet, "830f7ec8a7ce63e8648ff6321e9e69637ef2d74cc0afbc5cf00526149ba9e864644df1a6622d80ee7e4a714e5cccc1c12b2ba0597084bd11444") == 0, "mul result is wrong");
     bin_free(b1);
     bin_free(b2);
     bin_free(br);
+    ck_assert_msg(check_mem(), "memory leak");
+}
+END_TEST
+
+START_TEST(test_bin_mul_big2)
+{
+    char szRet[256] = {0};
+    Bin b1 = bin_create_uint(3);
+    Bin b2 = bin_create("x39e58a8055b6fb264b75ec8c646509784204ac15a8c24e05babc9729ab9b055c3a9458e4ce3289560a38e08ba8175a9446ce14e608245ab3a9978a8bd8acaa40");
+    bin_mul2(b1, b2, &b2);
+    bin2xstr(b2, szRet, 255);
+    ck_assert_msg(strcmp(szRet, "adb09f810124f172e261c5a52d2f1c68c60e0440fa46ea113035c57d02d11014afbd0aae6a979c021eaaa1a2f8460fbcd46a3eb2186d101afcc69fa38a05fec0") == 0, "mul result is wrong");
+    bin_free(b1);
+    bin_free(b2);
     ck_assert_msg(check_mem(), "memory leak");
 }
 END_TEST
@@ -639,6 +653,7 @@ Suite* make_add_suit(void)
     tcase_add_test(tc_stack, test_bin_neg_mul);
     tcase_add_test(tc_stack, test_bin_neg_mul_neg);
     tcase_add_test(tc_stack, test_bin_mul_big);
+    tcase_add_test(tc_stack, test_bin_mul_big2);
     tcase_add_test(tc_stack, test_bin_sub);
     tcase_add_test(tc_stack, test_bin_sub_neg);
     tcase_add_test(tc_stack, test_bin_neg_sub);

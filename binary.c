@@ -462,14 +462,20 @@ void _bin_mul(_bin *pa, _bin *pb, _bin *pr)
         _bin *py = _bin_create3(pb);
         px->sig = true;
         py->sig = true;
-        for (int i = CHAR_NUM-1; i >= 0; i--)
+        _num *pnext = &py->num;
+        while (pnext != NULL)
         {
-            for (int j = 0; j < 8; j++)
+            for (int i = CHAR_NUM-1; i >= 0; i--)
             {
-                if (py->num.bits[i] & (1 << j))
-                    _bin_add(pr, px, pr);
-                bin_lshift(px, 1);
+                for (int j = 0; j < 8; j++)
+                {
+                    //if (py->num.bits[i] & (1 << j))
+                    if (pnext->bits[i] & (1 << j))
+                        _bin_add(pr, px, pr);
+                    bin_lshift(px, 1);
+                }
             }
+            pnext = pnext->pnext;
         }
         pr->sig = (pa->sig == pb->sig);
         _bin_free(px);
