@@ -116,6 +116,12 @@ void _bin_extend_if_null(_num **ppa, _num **ppb)
     }
 }
 
+void _num_shift_next(_num **ppa, _num **ppb)
+{
+    *ppa = *ppb;
+    *ppb = (*ppa)->pnext;
+}
+
 _bin* _bin_create_x(const char *pstr, unsigned int isize)
 {
     _bin *pa = _bin_create();
@@ -131,7 +137,7 @@ _bin* _bin_create_x(const char *pstr, unsigned int isize)
             char ch2 = _x2ch((--inext >= 0) ? pstr[inext] : 0);
             pn_next->bits[i] = (ch2 << 4 | ch1);
         }
-        pn_next = pn_next->pnext;
+        _num_shift_next(&pn_tmp, &pn_next);
     }
     return pa;
 }
@@ -261,12 +267,6 @@ void _bin_init2(_bin *pa, _bin *pb)
     }
 }
 
-void _num_shift_next(_num **ppa, _num **ppb)
-{
-    *ppa = *ppb;
-    *ppb = (*ppa)->pnext;
-}
-
 void _num_lshift1(_num *pn)
 {
     if (pn != NULL)
@@ -317,17 +317,22 @@ bool _num_is_zero(_num *pn)
     return true;
 }
 
-void _num_clean(_num *pn)
+bool _num_clean(_num *pn)
 {
     if (pn != NULL)
     {
-        _num_clean(pn->pnext);
-        if (pn->pnext != NULL && _num_is_zero(pn->pnext))
+        if (_num_clean(pn->pnext))
         {
-            _num_free(pn->pnext);
             pn->pnext = NULL;
+            if (_num_is_zero(pn))
+            {
+                _num_free(pn);
+                return true;
+            }
         }
+        return false;
     }
+    return true;
 }
 
 int _num_rshift1(_num *pn)
@@ -808,8 +813,8 @@ void bin_printb(_bin *pbin)
 
 void bin_printx(_bin *pa)
 {
-    char szStr[258] = {0};
-    bin2xstr2((Bin)pa, szStr, 257);
+    char szStr[1024] = {0};
+    bin2xstr2((Bin)pa, szStr, 1023);
     printf("%s\n", szStr);
 }
 
