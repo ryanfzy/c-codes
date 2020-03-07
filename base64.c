@@ -14,10 +14,8 @@ bool base64_encode(const char *pin, const size_t insize, char *pout, const size_
 {
     if (NOT_NULL(pin) && insize > 0 && NOT_NULL(pout) && outsize > 0)
     {
-        size_t inpos = 0;
-        size_t outpos = 0;
         size_t in1, in2, in3, out1, out2, out3, out4;
-        while (inpos < insize && outpos < outsize)
+        for (size_t inpos = 0, outpos = 0; inpos < insize && outpos < outsize; inpos+=3, outpos+=4)
         {
             in1 = pin[inpos];
             in2 = (inpos+1) < insize ? pin[inpos+1] : 0;
@@ -27,25 +25,13 @@ bool base64_encode(const char *pin, const size_t insize, char *pout, const size_
             out3 = in3 >> 6 | ((in2 & 0x0f) << 2);
             out4 = in3 & 0x3f;
 
-            if (inpos+2 < insize)
-            {
-                if (outpos+3 < outsize)
-                    pout[outpos+3] = pTable[out4];
-            }
-            else if (outpos+3 < outsize)
-                pout[outpos+3] = '=';
-            if (inpos+1 < insize)
-            {
-                if (outpos+2 < outsize)
-                    pout[outpos+2] = pTable[out3];
-            }
-            else if (outpos+2 < outsize)
-                pout[outpos+2] = '=';
+            if (outpos+3 < outsize)
+                pout[outpos+3] = inpos+2 < insize ? pTable[out4] : '=';
+            if (outpos+2 < outsize)
+                pout[outpos+2] = inpos+1 < insize ? pTable[out3] : '=';
             if (outpos+1 < outsize)
                 pout[outpos+1] = pTable[out2];
             pout[outpos] = pTable[out1];
-            inpos+=3;
-            outpos+=4;
         }
         return true;
     }
