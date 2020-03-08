@@ -10,6 +10,21 @@ static const char pTable[] =
     'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/',
 };
 
+static char _decode(const char k)
+{
+    if (k >= 'A' && k <= 'Z')
+        return k - 'A';
+    else if (k >= 'a' && k <= 'z')
+        return k - 'a' + 26;
+    else if (k >= 0 && k <= '9')
+        return k - '0' + 52;
+    else if (k == '+')
+        return 62;
+    else if (k == '/')
+        return 63;
+    return 0;
+}
+
 bool base64_encode(const char *pin, const size_t insize, char *pout, const size_t outsize)
 {
     if (NOT_NULL(pin) && insize > 0 && NOT_NULL(pout) && outsize > 0)
@@ -38,8 +53,29 @@ bool base64_encode(const char *pin, const size_t insize, char *pout, const size_
     return false;
 }
 
-bool base64_decode(const char *pin, size_t insize, char *pout, size_t outsize)
+bool base64_decode(const char *pin, const size_t insize, char *pout, const size_t outsize)
 {
-    return true;
+    if (NOT_NULL(pin) && insize > 0 && NOT_NULL(pout) && outsize > 0)
+    {
+        size_t in1, in2, in3, in4, out1, out2, out3;
+        for (size_t inpos = 0, outpos = 0; inpos < insize && outpos < outsize; inpos+=4, outpos+=3)
+        {
+            in1 = _decode(pin[inpos]);
+            in2 = ((inpos+1) < insize && pin[inpos+1] != '=') ? _decode(pin[inpos+1]) : 0; 
+            in3 = ((inpos+2) < insize && pin[inpos+2] != '=') ? _decode(pin[inpos+2]) : 0; 
+            in4 = ((inpos+3) < insize && pin[inpos+3] != '=') ? _decode(pin[inpos+3]) : 0;
+            out1 = (in1 << 2) | ((in2 & 0x30) >> 4);
+            out2 = ((in2 & 0x0f) << 4) | ((in3 & 0x3c) >> 2);
+            out3 = ((in3 & 0x03) << 6) | in4;
+
+            pout[outpos] = out1;
+            if (outpos+1 < outsize && (inpos+2) < insize && pin[inpos+2] != '=')
+                pout[outpos+1] = out2;
+            if (outpos+2 < outsize && (inpos+3) < insize && pin[inpos+3] != '=')
+                pout[outpos+2] = out3;
+        }
+        return true;
+    }
+    return false;
 }
 
