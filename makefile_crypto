@@ -1,0 +1,19 @@
+OBJDIR = obj
+BINDIR = bin
+OBJECTS = $(OBJDIR)/test_crypto.o $(OBJDIR)/rc4.o
+
+STD_OPTS = -Wall -std=c99 -I. -c $< -o $@
+
+$(BINDIR)/test_crypto.exe : $(OBJECTS) | $(BINDIR)
+	gcc -Wall -o $@ $(OBJECTS)
+$(OBJDIR)/rc4.o : crypto/rc4.c
+	gcc $(STD_OPTS)
+$(OBJDIR)/test_crypto.o : tests/test_crypto.c
+	gcc $(STD_OPTS)
+
+$(OBJECTS): | $(OBJDIR)
+$(OBJDIR):
+	mkdir $(OBJDIR)
+
+$(BINDIR):
+	mkdir $(BINDIR)
