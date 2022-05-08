@@ -98,7 +98,7 @@ bool xmlparser_feed(XmlParser parser, char ch, XmlToken *token)
                     case 17:
                         *token = ATTR;
                         return true;
-                    case 21:
+                    case 20:
                         *token = CLOSE_TAG;
                         return true;
                     default:
