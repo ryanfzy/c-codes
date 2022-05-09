@@ -11,23 +11,23 @@ static int _token_table[21][8] =
 //    alnum  <      /      >      "      space   =      non-space
     { ER,    14,    ER,    ER,    ER,    ER,     ER,    ER },  // 0 - only accept <
     { 2,     ER,    3,     ER,    ER,    ER,     ER,    ER },  // 1 : < (TEXT)
-    { 2,     ER,    12,    5,     ER,    6,      ER,    ER },  // 2 : start tag
+    { 2,     ER,    ER,    5,     ER,    6,      ER,    ER },  // 2 : start tag
     { 4,     ER,    ER,    ER,    ER,    ER,     ER,    ER },  // 3 : </
     { 4,     ER,    ER,    20,    ER,    ER,     ER,    ER },  // 4 : end tag
     { 5,     1,     ER,    ER,    5,     5,      5,     5  },  // 5 : text (OEPN_TAG)
-    { 7,     ER,    ER,    ER,    ER,    ER,     ER,    ER },  // 6 : starting attribute (OPEN_TAG)
+    { 7,     ER,    12,    ER,    ER,    ER,     ER,    ER },  // 6 : starting attribute (OPEN_TAG)
     { 7,     ER,    ER,    15,    ER,    16,     8,     ER },  // 7 : attribute key
     { ER,    ER,    ER,    ER,    9,     ER,     ER,    ER },  // 8 : = (ATTR_NAME)
     { 10,    ER,    ER,    ER,    ER,    ER,     ER,    ER },  // 9 : starting attribute value
     { 10,    ER,    ER,    ER,    11,    ER,     ER,    ER },  // 10 : attribute value
     { ER,    ER,    ER,    19,    ER,    18,     ER,    ER },  // 11 : end attribute value (ATTR_VAL)
     { ER,    ER,    ER,    13,    ER,    ER,     ER,    ER },  // 12 : />
-    { 13,    1,     ER,    ER,    13,    13,     13,    13 },  // 13 : text (TAG)
+    { 13,    1,     ER,    ER,    13,    13,     13,    13 },  // 13 : text (CLOSE_TAG)
     { 2,     ER,    3,     ER,    ER,    ER,     ER,    ER },  // 14 : <
     { 15,    1,     ER,    ER,    15,    15,     15,    15 },  // 15 : text (ATTR)
-    { 17,    ER,    ER,    ER,    ER,    ER,     ER,    ER },  // 16 : starting attribute
-    { 17,    ER,    ER,    15,    ER,    16,     8,     ER },  // 17 : attribute (ATTR)
-    { 7,     ER,    ER,    ER,    ER,    ER,     ER,    ER },  // 18 : starting attribute
+    { 17,    ER,    12,    ER,    ER,    ER,     ER,    ER },  // 16 : starting attribute (ATTR)
+    { 17,    ER,    ER,    15,    ER,    16,     8,     ER },  // 17 : attribute
+    { 7,     ER,    12,    ER,    ER,    ER,     ER,    ER },  // 18 : starting attribute
     { 19,    1,     ER,    ER,    19,    19,     19,    19 },  // 19 : text
     { 20,    1,     ER,    ER,    20,    20,     20,    20 },  // 20 : text (CLOSE_TAG)
 };
@@ -91,13 +91,12 @@ bool xmlparser_feed(XmlParser parser, char ch, XmlToken *token)
                     case 11:
                         *token = ATTR_VAL;
                         return true;
-                    case 13:
-                        *token = TAG;
-                        return true;
                     case 15:
-                    case 17:
+                    case 16:
+                    case 21:
                         *token = ATTR;
                         return true;
+                    case 13:
                     case 20:
                         *token = CLOSE_TAG;
                         return true;

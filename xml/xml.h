@@ -14,7 +14,6 @@ typedef enum _XmlToken
     TEXT,
     OPEN_TAG,
     CLOSE_TAG,
-    TAG,
     ATTR_NAME,
     ATTR_VAL,
     ATTR,
