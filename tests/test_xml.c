@@ -3,396 +3,596 @@
 #include <check.h>
 #include "..\xml\xml.h"
 
+#define CK_ASSERT_INT_EQ(E,A) ck_assert_msg(E == A, "Expected %d, but actual %d.\n", E, A);
+
+typedef struct _ActualResult
+{
+    XmlToken token;
+    int start;
+    int length;
+} ActualResult;
+
 START_TEST(test_1)
 {
     char *test_data = "<tag>";
-    XmlToken token = ER;
-    XmlToken tokens[10] = { ER };
+    ActualResult results[10] = { 0 };
     int i = 0, n = 0;
-    XmlParser parser = xmlparser_create();
+    XmlParser parser;
+    xmlparser_init(&parser);
     for (; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
+        if (xmlparser_feed(&parser, test_data[i]))
         {
-            if (token == ER)
+            if (parser.token == ER)
                 break;
-            tokens[n++] = token;
+            results[n].token = parser.token;
+            results[n].start = parser.start;
+            results[n].length = parser.length;
+            n++;
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
     ck_assert_msg(n == 1, "Wrong number of tokens found.\n");
-    ck_assert_msg(tokens[0] == OPEN_TAG, "Wrong token found.\n");
+    ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[0].start);
+    CK_ASSERT_INT_EQ(3, results[0].length);
 }
 END_TEST
 
 START_TEST(test_1_1)
 {
     char *test_data = "<tag />";
-    XmlToken token = ER;
-    XmlToken tokens[10] = { ER };
+    ActualResult results[10] = { 0 };
     int i = 0, n = 0;
-    XmlParser parser = xmlparser_create();
+    XmlParser parser;
+    xmlparser_init(&parser);
     for (; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
+        if (xmlparser_feed(&parser, test_data[i]))
         {
-            if (token == ER)
+            if (parser.token == ER)
                 break;
-            tokens[n++] = token;
+            results[n].token = parser.token;
+            results[n].start = parser.start;
+            results[n].length = parser.length;
+            n++;
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
     ck_assert_msg(n == 2, "Wrong number of tokens found.\n");
-    ck_assert_msg(tokens[0] == OPEN_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[1] == CLOSE_TAG, "Wrong token found.\n");
+    ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[0].start);
+    CK_ASSERT_INT_EQ(3, results[0].length);
+    ck_assert_msg(results[1].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[1].start);
+    CK_ASSERT_INT_EQ(3, results[1].length);
 }
 END_TEST
 
 START_TEST(test_1_2)
 {
     char *test_data = "<tag attr />";
-    XmlToken token = ER;
-    XmlToken tokens[10] = { ER };
+    ActualResult results[10] = { 0 };
     int i = 0, n = 0;
-    XmlParser parser = xmlparser_create();
+    XmlParser parser;
+    xmlparser_init(&parser);
     for (; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
+        if (xmlparser_feed(&parser, test_data[i]))
         {
-            if (token == ER)
+            if (parser.token == ER)
                 break;
-            tokens[n++] = token;
+            results[n].token = parser.token;
+            results[n].start = parser.start;
+            results[n].length = parser.length;
+            n++;
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
     ck_assert_msg(n == 3, "Wrong number of tokens found.\n");
-    ck_assert_msg(tokens[0] == OPEN_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[1] == ATTR, "Wrong token found.\n");
-    ck_assert_msg(tokens[2] == CLOSE_TAG, "Wrong token found.\n");
+    ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[0].start);
+    CK_ASSERT_INT_EQ(3, results[0].length);
+    ck_assert_msg(results[1].token == ATTR, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(5, results[1].start);
+    CK_ASSERT_INT_EQ(4, results[1].length);
+    ck_assert_msg(results[2].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[2].start);
+    CK_ASSERT_INT_EQ(3, results[2].length);
 }
 END_TEST
 
 START_TEST(test_1_3)
 {
     char *test_data = "<tag attr=\"val\" />";
-    XmlToken token = ER;
-    XmlToken tokens[10] = { ER };
+    ActualResult results[10] = { 0 };
     int i = 0, n = 0;
-    XmlParser parser = xmlparser_create();
+    XmlParser parser;
+    xmlparser_init(&parser);
     for (; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
+        if (xmlparser_feed(&parser, test_data[i]))
         {
-            if (token == ER)
+            if (parser.token == ER)
                 break;
-            tokens[n++] = token;
+            results[n].token = parser.token;
+            results[n].start = parser.start;
+            results[n].length = parser.length;
+            n++;
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
     ck_assert_msg(n == 4, "Wrong number of tokens found.\n");
-    ck_assert_msg(tokens[0] == OPEN_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[1] == ATTR_NAME, "Wrong token found.\n");
-    ck_assert_msg(tokens[2] == ATTR_VAL, "Wrong token found.\n");
-    ck_assert_msg(tokens[3] == CLOSE_TAG, "Wrong token found.\n");
+    ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[0].start);
+    CK_ASSERT_INT_EQ(3, results[0].length);
+    ck_assert_msg(results[1].token == ATTR_NAME, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(5, results[1].start);
+    CK_ASSERT_INT_EQ(4, results[1].length);
+    ck_assert_msg(results[2].token == ATTR_VAL, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(11, results[2].start);
+    CK_ASSERT_INT_EQ(3, results[2].length);
+    ck_assert_msg(results[3].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[3].start);
+    CK_ASSERT_INT_EQ(3, results[3].length);
 }
 END_TEST
 
 START_TEST(test_2)
 {
     char *test_data = "<tag></tag>";
-    XmlToken token = ER;
-    XmlToken tokens[10] = { ER };
+    ActualResult results[10] = { 0 };
     int i = 0, n = 0;
-    XmlParser parser = xmlparser_create();
+    XmlParser parser;
+    xmlparser_init(&parser);
     for (; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
+        if (xmlparser_feed(&parser, test_data[i]))
         {
-            if (token == ER)
+            if (parser.token == ER)
                 break;
-            tokens[n++] = token;
+            results[n].token = parser.token;
+            results[n].start = parser.start;
+            results[n].length = parser.length;
+            n++;
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
     ck_assert_msg(n == 3, "Wrong number of tokens found.\n");
-    ck_assert_msg(tokens[0] == OPEN_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[1] == TEXT, "Wrong token found.\n");
-    ck_assert_msg(tokens[2] == CLOSE_TAG, "Wrong token found.\n");
+    ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[0].start);
+    CK_ASSERT_INT_EQ(3, results[0].length);
+    ck_assert_msg(results[1].token == TEXT, "Wrong token found.\n");  //TODO: remove
+    ck_assert_msg(results[2].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(7, results[2].start);
+    CK_ASSERT_INT_EQ(3, results[2].length);
 }
 END_TEST
 
 START_TEST(test_3)
 {
     char *test_data = "<tag>text</tag>";
-    XmlToken token = ER;
-    XmlToken tokens[10] = { ER };
+    ActualResult results[10] = { 0 };
     int i = 0, n = 0;
-    XmlParser parser = xmlparser_create();
+    XmlParser parser;
+    xmlparser_init(&parser);
     for (; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
+        if (xmlparser_feed(&parser, test_data[i]))
         {
-            if (token == ER)
+            if (parser.token == ER)
                 break;
-            tokens[n++] = token;
+            results[n].token = parser.token;
+            results[n].start = parser.start;
+            results[n].length = parser.length;
+            n++;
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
     ck_assert_msg(n == 3, "Wrong number of tokens found.\n");
-    ck_assert_msg(tokens[0] == OPEN_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[1] == TEXT, "Wrong token found.\n");
-    ck_assert_msg(tokens[2] == CLOSE_TAG, "Wrong token found.\n");
+    ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[0].start);
+    CK_ASSERT_INT_EQ(3, results[0].length);
+    ck_assert_msg(results[1].token == TEXT, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(5, results[1].start);
+    CK_ASSERT_INT_EQ(4, results[1].length);
+    ck_assert_msg(results[2].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(11, results[2].start);
+    CK_ASSERT_INT_EQ(3, results[2].length);
 }
 END_TEST
 
 START_TEST(test_4)
 {
     char *test_data = "<tag attr>text</tag>";
-    XmlToken token = ER;
-    XmlToken tokens[10] = { ER };
+    ActualResult results[10] = { 0 };
     int i = 0, n = 0;
-    XmlParser parser = xmlparser_create();
+    XmlParser parser;
+    xmlparser_init(&parser);
     for (; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
+        if (xmlparser_feed(&parser, test_data[i]))
         {
-            if (token == ER)
+            if (parser.token == ER)
                 break;
-            tokens[n++] = token;
+            results[n].token = parser.token;
+            results[n].start = parser.start;
+            results[n].length = parser.length;
+            n++;
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
     ck_assert_msg(n == 4, "Wrong number of tokens found.\n");
-    ck_assert_msg(tokens[0] == OPEN_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[1] == ATTR, "Wrong token found.\n");
-    ck_assert_msg(tokens[2] == TEXT, "Wrong token found.\n");
-    ck_assert_msg(tokens[3] == CLOSE_TAG, "Wrong token found.\n");
+    ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[0].start);
+    CK_ASSERT_INT_EQ(3, results[0].length);
+    ck_assert_msg(results[1].token == ATTR, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(5, results[1].start);
+    CK_ASSERT_INT_EQ(4, results[1].length);
+    ck_assert_msg(results[2].token == TEXT, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(10, results[2].start);
+    CK_ASSERT_INT_EQ(4, results[2].length);
+    ck_assert_msg(results[3].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(16, results[3].start);
+    CK_ASSERT_INT_EQ(3, results[3].length);
 }
 END_TEST
 
 START_TEST(test_4_1)
 {
     char *test_data = "<tag attr attr2>text</tag>";
-    XmlToken token = ER;
-    XmlToken tokens[10] = { ER };
+    ActualResult results[10] = { 0 };
     int i = 0, n = 0;
-    XmlParser parser = xmlparser_create();
+    XmlParser parser;
+    xmlparser_init(&parser);
     for (; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
+        if (xmlparser_feed(&parser, test_data[i]))
         {
-            if (token == ER)
+            if (parser.token == ER)
                 break;
-            tokens[n++] = token;
+            results[n].token = parser.token;
+            results[n].start = parser.start;
+            results[n].length = parser.length;
+            n++;
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
     ck_assert_msg(n == 5, "Wrong number of tokens found.\n");
-    ck_assert_msg(tokens[0] == OPEN_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[1] == ATTR, "Wrong token found.\n");
-    ck_assert_msg(tokens[2] == ATTR, "Wrong token found.\n");
-    ck_assert_msg(tokens[3] == TEXT, "Wrong token found.\n");
-    ck_assert_msg(tokens[4] == CLOSE_TAG, "Wrong token found.\n");
+    ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[0].start);
+    CK_ASSERT_INT_EQ(3, results[0].length);
+    ck_assert_msg(results[1].token == ATTR, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(5, results[1].start);
+    CK_ASSERT_INT_EQ(4, results[1].length);
+    ck_assert_msg(results[2].token == ATTR, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(10, results[2].start);
+    CK_ASSERT_INT_EQ(5, results[2].length);
+    ck_assert_msg(results[3].token == TEXT, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(16, results[3].start);
+    CK_ASSERT_INT_EQ(4, results[3].length);
+    ck_assert_msg(results[4].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(22, results[4].start);
+    CK_ASSERT_INT_EQ(3, results[4].length);
 }
 END_TEST
 
 START_TEST(test_5)
 {
     char *test_data = "<tag attr=\"value\">text</tag>";
-    XmlToken token = ER;
-    XmlToken tokens[10] = { ER };
+    ActualResult results[10] = { 0 };
     int i = 0, n = 0;
-    XmlParser parser = xmlparser_create();
+    XmlParser parser;
+    xmlparser_init(&parser);
     for (; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
+        if (xmlparser_feed(&parser, test_data[i]))
         {
-            if (token == ER)
+            if (parser.token == ER)
                 break;
-            tokens[n++] = token;
+            results[n].token = parser.token;
+            results[n].start = parser.start;
+            results[n].length = parser.length;
+            n++;
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
     ck_assert_msg(n == 5, "Wrong number of tokens found.\n");
-    ck_assert_msg(tokens[0] == OPEN_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[1] == ATTR_NAME, "Wrong token found.\n");
-    ck_assert_msg(tokens[2] == ATTR_VAL, "Wrong token found.\n");
-    ck_assert_msg(tokens[3] == TEXT, "Wrong token found.\n");
-    ck_assert_msg(tokens[4] == CLOSE_TAG, "Wrong token found.\n");
+    ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[0].start);
+    CK_ASSERT_INT_EQ(3, results[0].length);
+    ck_assert_msg(results[1].token == ATTR_NAME, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(5, results[1].start);
+    CK_ASSERT_INT_EQ(4, results[1].length);
+    ck_assert_msg(results[2].token == ATTR_VAL, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(11, results[2].start);
+    CK_ASSERT_INT_EQ(5, results[2].length);
+    ck_assert_msg(results[3].token == TEXT, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(18, results[3].start);
+    CK_ASSERT_INT_EQ(4, results[3].length);
+    ck_assert_msg(results[4].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(24, results[4].start);
+    CK_ASSERT_INT_EQ(3, results[4].length);
 }
 END_TEST
 
 START_TEST(test_6)
 {
     char *test_data = "<tag attr=\"value\" attr2>text</tag>";
-    XmlToken token = ER;
-    XmlToken tokens[10] = { ER };
+    ActualResult results[10] = { 0 };
     int i = 0, n = 0;
-    XmlParser parser = xmlparser_create();
+    XmlParser parser;
+    xmlparser_init(&parser);
     for (; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
+        if (xmlparser_feed(&parser, test_data[i]))
         {
-            if (token == ER)
+            if (parser.token == ER)
                 break;
-            tokens[n++] = token;
+            results[n].token = parser.token;
+            results[n].start = parser.start;
+            results[n].length = parser.length;
+            n++;
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
     ck_assert_msg(n == 6, "Wrong number of tokens found.\n");
-    ck_assert_msg(tokens[0] == OPEN_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[1] == ATTR_NAME, "Wrong token found.\n");
-    ck_assert_msg(tokens[2] == ATTR_VAL, "Wrong token found.\n");
-    ck_assert_msg(tokens[3] == ATTR, "Wrong token found.\n");
-    ck_assert_msg(tokens[4] == TEXT, "Wrong token found.\n");
-    ck_assert_msg(tokens[5] == CLOSE_TAG, "Wrong token found.\n");
+    ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[0].start);
+    CK_ASSERT_INT_EQ(3, results[0].length);
+    ck_assert_msg(results[1].token == ATTR_NAME, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(5, results[1].start);
+    CK_ASSERT_INT_EQ(4, results[1].length);
+    ck_assert_msg(results[2].token == ATTR_VAL, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(11, results[2].start);
+    CK_ASSERT_INT_EQ(5, results[2].length);
+    ck_assert_msg(results[3].token == ATTR, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(18, results[3].start);
+    CK_ASSERT_INT_EQ(5, results[3].length);
+    ck_assert_msg(results[4].token == TEXT, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(24, results[4].start);
+    CK_ASSERT_INT_EQ(4, results[4].length);
+    ck_assert_msg(results[5].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(30, results[5].start);
+    CK_ASSERT_INT_EQ(3, results[5].length);
 }
 END_TEST
 
 START_TEST(test_6_1)
 {
     char *test_data = "<tag attr attr2=\"value\">text</tag>";
-    XmlToken token = ER;
-    XmlToken tokens[10] = { ER };
+    ActualResult results[10] = { 0 };
     int i = 0, n = 0;
-    XmlParser parser = xmlparser_create();
+    XmlParser parser;
+    xmlparser_init(&parser);
     for (; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
+        if (xmlparser_feed(&parser, test_data[i]))
         {
-            if (token == ER)
+            if (parser.token == ER)
                 break;
-            tokens[n++] = token;
+            results[n].token = parser.token;
+            results[n].start = parser.start;
+            results[n].length = parser.length;
+            n++;
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
     ck_assert_msg(n == 6, "Wrong number of tokens found.\n");
-    ck_assert_msg(tokens[0] == OPEN_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[1] == ATTR, "Wrong token found.\n");
-    ck_assert_msg(tokens[2] == ATTR_NAME, "Wrong token found.\n");
-    ck_assert_msg(tokens[3] == ATTR_VAL, "Wrong token found.\n");
-    ck_assert_msg(tokens[4] == TEXT, "Wrong token found.\n");
-    ck_assert_msg(tokens[5] == CLOSE_TAG, "Wrong token found.\n");
+    ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[0].start);
+    CK_ASSERT_INT_EQ(3, results[0].length);
+    ck_assert_msg(results[1].token == ATTR, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(5, results[1].start);
+    CK_ASSERT_INT_EQ(4, results[1].length);
+    ck_assert_msg(results[2].token == ATTR_NAME, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(10, results[2].start);
+    CK_ASSERT_INT_EQ(5, results[2].length);
+    ck_assert_msg(results[3].token == ATTR_VAL, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(17, results[3].start);
+    CK_ASSERT_INT_EQ(5, results[3].length);
+    ck_assert_msg(results[4].token == TEXT, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(24, results[4].start);
+    CK_ASSERT_INT_EQ(4, results[4].length);
+    ck_assert_msg(results[5].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(30, results[5].start);
+    CK_ASSERT_INT_EQ(3, results[5].length);
 }
 END_TEST
 
 START_TEST(test_7)
 {
     char *test_data = "<tag attr=\"value\" attr2=\"value2\">text</tag>";
-    XmlToken token = ER;
-    XmlToken tokens[10] = { ER };
+    ActualResult results[10] = { 0 };
     int i = 0, n = 0;
-    XmlParser parser = xmlparser_create();
+    XmlParser parser;
+    xmlparser_init(&parser);
     for (; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
+        if (xmlparser_feed(&parser, test_data[i]))
         {
-            if (token == ER)
+            if (parser.token == ER)
                 break;
-            tokens[n++] = token;
+            results[n].token = parser.token;
+            results[n].start = parser.start;
+            results[n].length = parser.length;
+            n++;
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
     ck_assert_msg(n == 7, "Wrong number of tokens found.\n");
-    ck_assert_msg(tokens[0] == OPEN_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[1] == ATTR_NAME, "Wrong token found.\n");
-    ck_assert_msg(tokens[2] == ATTR_VAL, "Wrong token found.\n");
-    ck_assert_msg(tokens[3] == ATTR_NAME, "Wrong token found.\n");
-    ck_assert_msg(tokens[4] == ATTR_VAL, "Wrong token found.\n");
-    ck_assert_msg(tokens[5] == TEXT, "Wrong token found.\n");
-    ck_assert_msg(tokens[6] == CLOSE_TAG, "Wrong token found.\n");
+    ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[0].start);
+    CK_ASSERT_INT_EQ(3, results[0].length);
+    ck_assert_msg(results[1].token == ATTR_NAME, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(5, results[1].start);
+    CK_ASSERT_INT_EQ(4, results[1].length);
+    ck_assert_msg(results[2].token == ATTR_VAL, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(11, results[2].start);
+    CK_ASSERT_INT_EQ(5, results[2].length);
+    ck_assert_msg(results[3].token == ATTR_NAME, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(18, results[3].start);
+    CK_ASSERT_INT_EQ(5, results[3].length);
+    ck_assert_msg(results[4].token == ATTR_VAL, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(25, results[4].start);
+    CK_ASSERT_INT_EQ(6, results[4].length);
+    ck_assert_msg(results[5].token == TEXT, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(33, results[5].start);
+    CK_ASSERT_INT_EQ(4, results[5].length);
+    ck_assert_msg(results[6].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(39, results[6].start);
+    CK_ASSERT_INT_EQ(3, results[6].length);
 }
 END_TEST
 
 START_TEST(test_8)
 {
     char *test_data = "<tag attr=\"value\" attr2=\"value2\"><subtag>text</subtag></tag>";
-    XmlToken token = ER;
-    XmlToken tokens[15] = { ER };
+    ActualResult results[15] = { 0 };
     int i = 0, n = 0;
-    XmlParser parser = xmlparser_create();
+    XmlParser parser;
+    xmlparser_init(&parser);
     for (; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
+        if (xmlparser_feed(&parser, test_data[i]))
         {
-            if (token == ER)
+            if (parser.token == ER)
                 break;
-            tokens[n++] = token;
+            results[n].token = parser.token;
+            results[n].start = parser.start;
+            results[n].length = parser.length;
+            n++;
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
     ck_assert_msg(n == 11, "Wrong number of tokens found.\n");
-    ck_assert_msg(tokens[0] == OPEN_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[1] == ATTR_NAME, "Wrong token found.\n");
-    ck_assert_msg(tokens[2] == ATTR_VAL, "Wrong token found.\n");
-    ck_assert_msg(tokens[3] == ATTR_NAME, "Wrong token found.\n");
-    ck_assert_msg(tokens[4] == ATTR_VAL, "Wrong token found.\n");
-    ck_assert_msg(tokens[5] == TEXT, "Wrong token found.\n");
-    ck_assert_msg(tokens[6] == OPEN_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[7] == TEXT, "Wrong token found.\n");
-    ck_assert_msg(tokens[8] == CLOSE_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[9] == TEXT, "Wrong token found.\n");
-    ck_assert_msg(tokens[10] == CLOSE_TAG, "Wrong token found.\n");
+    ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[0].start);
+    CK_ASSERT_INT_EQ(3, results[0].length);
+    ck_assert_msg(results[1].token == ATTR_NAME, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(5, results[1].start);
+    CK_ASSERT_INT_EQ(4, results[1].length);
+    ck_assert_msg(results[2].token == ATTR_VAL, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(11, results[2].start);
+    CK_ASSERT_INT_EQ(5, results[2].length);
+    ck_assert_msg(results[3].token == ATTR_NAME, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(18, results[3].start);
+    CK_ASSERT_INT_EQ(5, results[3].length);
+    ck_assert_msg(results[4].token == ATTR_VAL, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(25, results[4].start);
+    CK_ASSERT_INT_EQ(6, results[4].length);
+    ck_assert_msg(results[5].token == TEXT, "Wrong token found.\n");
+    ck_assert_msg(results[6].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(34, results[6].start);
+    CK_ASSERT_INT_EQ(6, results[6].length);
+    ck_assert_msg(results[7].token == TEXT, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(41, results[7].start);
+    CK_ASSERT_INT_EQ(4, results[7].length);
+    ck_assert_msg(results[8].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(47, results[8].start);
+    CK_ASSERT_INT_EQ(6, results[8].length);
+    ck_assert_msg(results[9].token == TEXT, "Wrong token found.\n");
+    ck_assert_msg(results[10].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(56, results[10].start);
+    CK_ASSERT_INT_EQ(3, results[10].length);
 }
 END_TEST
 
 START_TEST(test_9)
 {
     char *test_data = "<tag>text<subtag>subtext</subtag>text</tag>";
-    XmlToken token = ER;
-    XmlToken tokens[10] = { ER };
+    ActualResult results[10] = { 0 };
     int i = 0, n = 0;
-    XmlParser parser = xmlparser_create();
+    XmlParser parser;
+    xmlparser_init(&parser);
     for (; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
+        if (xmlparser_feed(&parser, test_data[i]))
         {
-            if (token == ER)
+            if (parser.token == ER)
                 break;
-            tokens[n++] = token;
+            results[n].token = parser.token;
+            results[n].start = parser.start;
+            results[n].length = parser.length;
+            n++;
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
     ck_assert_msg(n == 7, "Wrong number of tokens found.\n");
-    ck_assert_msg(tokens[0] == OPEN_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[1] == TEXT, "Wrong token found.\n");
-    ck_assert_msg(tokens[2] == OPEN_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[3] == TEXT, "Wrong token found.\n");
-    ck_assert_msg(tokens[4] == CLOSE_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[5] == TEXT, "Wrong token found.\n");
-    ck_assert_msg(tokens[6] == CLOSE_TAG, "Wrong token found.\n");
+    ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[0].start);
+    CK_ASSERT_INT_EQ(3, results[0].length);
+    ck_assert_msg(results[1].token == TEXT, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(5, results[1].start);
+    CK_ASSERT_INT_EQ(4, results[1].length);
+    ck_assert_msg(results[2].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(10, results[2].start);
+    CK_ASSERT_INT_EQ(6, results[2].length);
+    ck_assert_msg(results[3].token == TEXT, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(17, results[3].start);
+    CK_ASSERT_INT_EQ(7, results[3].length);
+    ck_assert_msg(results[4].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(26, results[4].start);
+    CK_ASSERT_INT_EQ(6, results[4].length);
+    ck_assert_msg(results[5].token == TEXT, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(33, results[5].start);
+    CK_ASSERT_INT_EQ(4, results[5].length);
+    ck_assert_msg(results[6].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(39, results[6].start);
+    CK_ASSERT_INT_EQ(3, results[6].length);
 }
 END_TEST
 
 START_TEST(test_10)
 {
     char *test_data = "<tag><subtag attr=\"value\" attr2=\"value2\">subtext</subtag></tag>";
-    XmlToken token = ER;
-    XmlToken tokens[15] = { ER };
+    ActualResult results[15] = { 0 };
     int i = 0, n = 0;
-    XmlParser parser = xmlparser_create();
+    XmlParser parser;
+    xmlparser_init(&parser);
     for (; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
+        if (xmlparser_feed(&parser, test_data[i]))
         {
-            if (token == ER)
+            if (parser.token == ER)
                 break;
-            tokens[n++] = token;
+            results[n].token = parser.token;
+            results[n].start = parser.start;
+            results[n].length = parser.length;
+            n++;
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
     ck_assert_msg(n == 11, "Wrong number of tokens found.\n");
-    ck_assert_msg(tokens[0] == OPEN_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[1] == TEXT, "Wrong token found.\n");
-    ck_assert_msg(tokens[2] == OPEN_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[3] == ATTR_NAME, "Wrong token found.\n");
-    ck_assert_msg(tokens[4] == ATTR_VAL, "Wrong token found.\n");
-    ck_assert_msg(tokens[5] == ATTR_NAME, "Wrong token found.\n");
-    ck_assert_msg(tokens[6] == ATTR_VAL, "Wrong token found.\n");
-    ck_assert_msg(tokens[7] == TEXT, "Wrong token found.\n");
-    ck_assert_msg(tokens[8] == CLOSE_TAG, "Wrong token found.\n");
-    ck_assert_msg(tokens[9] == TEXT, "Wrong token found.\n");
-    ck_assert_msg(tokens[10] == CLOSE_TAG, "Wrong token found.\n");
+    ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(1, results[0].start);
+    CK_ASSERT_INT_EQ(3, results[0].length);
+    ck_assert_msg(results[1].token == TEXT, "Wrong token found.\n");
+    ck_assert_msg(results[2].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(6, results[2].start);
+    CK_ASSERT_INT_EQ(6, results[2].length);
+    ck_assert_msg(results[3].token == ATTR_NAME, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(13, results[3].start);
+    CK_ASSERT_INT_EQ(4, results[3].length);
+    ck_assert_msg(results[4].token == ATTR_VAL, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(19, results[4].start);
+    CK_ASSERT_INT_EQ(5, results[4].length);
+    ck_assert_msg(results[5].token == ATTR_NAME, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(26, results[5].start);
+    CK_ASSERT_INT_EQ(5, results[5].length);
+    ck_assert_msg(results[6].token == ATTR_VAL, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(33, results[6].start);
+    CK_ASSERT_INT_EQ(6, results[6].length);
+    ck_assert_msg(results[7].token == TEXT, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(41, results[7].start);
+    CK_ASSERT_INT_EQ(7, results[7].length);
+    ck_assert_msg(results[8].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(50, results[8].start);
+    CK_ASSERT_INT_EQ(6, results[8].length);
+    ck_assert_msg(results[9].token == TEXT, "Wrong token found.\n");
+    ck_assert_msg(results[10].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(59, results[10].start);
+    CK_ASSERT_INT_EQ(3, results[10].length);
 }
 END_TEST
 

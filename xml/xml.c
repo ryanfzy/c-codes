@@ -1,12 +1,7 @@
 #include <ctype.h>
 #include "xml.h"
 
-typedef struct _xmlParser
-{
-    int row;
-} _XmlParser;
-
-static int _token_table[21][8] =
+static int _token_table[22][8] =
 {
 //    alnum  <      /      >      "      space   =      non-space
     { ER,    14,    ER,    ER,    ER,    ER,     ER,    ER },  // 0 - only accept <
@@ -14,7 +9,7 @@ static int _token_table[21][8] =
     { 2,     ER,    ER,    5,     ER,    6,      ER,    ER },  // 2 : start tag
     { 4,     ER,    ER,    ER,    ER,    ER,     ER,    ER },  // 3 : </
     { 4,     ER,    ER,    20,    ER,    ER,     ER,    ER },  // 4 : end tag
-    { 5,     1,     ER,    ER,    5,     5,      5,     5  },  // 5 : text (OEPN_TAG)
+    { 21,    1,     ER,    ER,    21,    21,     21,    21 },  // 5 : > (OEPN_TAG)
     { 7,     ER,    12,    ER,    ER,    ER,     ER,    ER },  // 6 : starting attribute (OPEN_TAG)
     { 7,     ER,    ER,    15,    ER,    16,     8,     ER },  // 7 : attribute key
     { ER,    ER,    ER,    ER,    9,     ER,     ER,    ER },  // 8 : = (ATTR_NAME)
@@ -24,12 +19,13 @@ static int _token_table[21][8] =
     { ER,    ER,    ER,    13,    ER,    ER,     ER,    ER },  // 12 : />
     { 13,    1,     ER,    ER,    13,    13,     13,    13 },  // 13 : text (CLOSE_TAG)
     { 2,     ER,    3,     ER,    ER,    ER,     ER,    ER },  // 14 : <
-    { 15,    1,     ER,    ER,    15,    15,     15,    15 },  // 15 : text (ATTR)
-    { 17,    ER,    12,    ER,    ER,    ER,     ER,    ER },  // 16 : starting attribute (ATTR)
+    { 21,    1,     ER,    ER,    21,    21,     21,    21 },  // 15 : text (ATTR)
+    { 17,    ER,    12,    ER,    ER,    ER,     ER,    ER },  // 16 : attribute (ATTR)
     { 17,    ER,    ER,    15,    ER,    16,     8,     ER },  // 17 : attribute
     { 7,     ER,    12,    ER,    ER,    ER,     ER,    ER },  // 18 : starting attribute
-    { 19,    1,     ER,    ER,    19,    19,     19,    19 },  // 19 : text
-    { 20,    1,     ER,    ER,    20,    20,     20,    20 },  // 20 : text (CLOSE_TAG)
+    { 21,    1,     ER,    ER,    21,    21,     21,    21 },  // 19 : text
+    { 21,    1,     ER,    ER,    21,    21,     21,    21 },  // 20 : text (CLOSE_TAG)
+    { 21,    1,     ER,    ER,    21,    21,     21,    21 },  // 21 : text
 };
 
 static int _char_to_index(char ch)
@@ -45,70 +41,89 @@ static int _char_to_index(char ch)
     return -1;
 }
 
-XmlParser xmlparser_create()
+void xmlparser_init(XmlParser *p)
 {
-    _XmlParser *p = malloc(sizeof(_XmlParser));
-    p->row = 0;
-    return (XmlParser)p;
-}
-
-void xmlparser_free(XmlParser parser)
-{
-    _XmlParser *p = (_XmlParser*)parser;
-    if (p != NULL)
-        free(p);
-}
-
-bool xmlparser_feed(XmlParser parser, char ch, XmlToken *token)
-{
-    _XmlParser *p = (_XmlParser*)parser;
     if (p != NULL)
     {
-        if (p->row == ER)
+        p->_row = 0;
+        p->_open_tag_start = 0;
+        p->_open_tag_length = 0;
+        p->token = NONE;
+        p->start = 0;
+        p->length = 0;
+        p->count = 0;
+    }
+}
+
+bool xmlparser_feed(XmlParser *p, char ch)
+{
+    if (p != NULL)
+    {
+        if (p->_row == ER)
         {
-            *token = ER;
+            p->token = ER;
             return true;
         }
+        p->count++;
         int i = _char_to_index(ch);
-        int prev_r = p->row;
-        p->row = _token_table[p->row][i];
-        if (p->row != ER)
+        int prev_r = p->_row;
+        p->_row = _token_table[p->_row][i];
+        if (p->_row != ER)
         {
-            if (prev_r != p->row)
+            if (prev_r != p->_row)
             {
-                switch (p->row)
+                switch (p->_row)
                 {
                     case 1:
-                        *token = TEXT;
+                        p->token = TEXT;
+                        p->length = p->count - p->start - 1;
                         return true;
+                    case 2:  // attribute key
+                    case 4:  // close tag
+                    case 7:  // open tag
+                    case 10:  // attribute value
+                    case 17:  // attribute key
+                    case 21:  // text
+                        p->start = p->count-1;
+                        break;
                     case 5:
                     case 6:
-                        *token = OPEN_TAG;
+                        p->token = OPEN_TAG;
+                        p->length = p->count - p->start - 1;
+                        p->_open_tag_start = p->start;
+                        p->_open_tag_length = p->length;
                         return true;
                     case 8:
-                        *token = ATTR_NAME;
+                        p->token = ATTR_NAME;
+                        p->length = p->count - p->start - 1;
                         return true;
                     case 11:
-                        *token = ATTR_VAL;
+                        p->token = ATTR_VAL;
+                        p->length = p->count - p->start - 1;
                         return true;
                     case 15:
                     case 16:
-                    case 21:
-                        *token = ATTR;
+                        p->token = ATTR;
+                        p->length = p->count - p->start - 1;
                         return true;
                     case 13:
+                        p->token = CLOSE_TAG;
+                        p->start = p->_open_tag_start;
+                        p->length = p->_open_tag_length;
+                        return true;
                     case 20:
-                        *token = CLOSE_TAG;
+                        p->token = CLOSE_TAG;
+                        p->length = p->count - p->start - 1;
                         return true;
                     default:
                         break;
                 }
             }
-            *token = NONE;
+            p->token = NONE;
         }
         else
         {
-            *token = ER;
+            p->token = ER;
             return true;
         }
     }
