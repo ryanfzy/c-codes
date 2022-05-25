@@ -1,11 +1,11 @@
 #include <ctype.h>
 #include "xml.h"
 
-static int _token_table[22][8] =
+static int _token_table[23][8] =
 {
 //    alnum  <      /      >      "      space   =      non-space
     { ER,    14,    ER,    ER,    ER,    ER,     ER,    ER },  // 0 - only accept <
-    { 2,     ER,    3,     ER,    ER,    ER,     ER,    ER },  // 1 : < (TEXT)
+    { 2,     ER,    3,     ER,    ER,    ER,     ER,    ER },  // 1 : <
     { 2,     ER,    ER,    5,     ER,    6,      ER,    ER },  // 2 : start tag
     { 4,     ER,    ER,    ER,    ER,    ER,     ER,    ER },  // 3 : </
     { 4,     ER,    ER,    20,    ER,    ER,     ER,    ER },  // 4 : end tag
@@ -25,7 +25,8 @@ static int _token_table[22][8] =
     { 7,     ER,    12,    ER,    ER,    ER,     ER,    ER },  // 18 : starting attribute
     { 21,    1,     ER,    ER,    21,    21,     21,    21 },  // 19 : text
     { 21,    1,     ER,    ER,    21,    21,     21,    21 },  // 20 : text (CLOSE_TAG)
-    { 21,    1,     ER,    ER,    21,    21,     21,    21 },  // 21 : text
+    { 21,    22,    ER,    ER,    21,    21,     21,    21 },  // 21 : text
+    { 2,     ER,    3,     ER,    ER,    ER,     ER,    ER },  // 22 : < (TEXT)
 };
 
 static int _char_to_index(char ch)
@@ -74,10 +75,6 @@ bool xmlparser_feed(XmlParser *p, char ch)
             {
                 switch (p->_row)
                 {
-                    case 1:
-                        p->token = TEXT;
-                        p->length = p->count - p->start - 1;
-                        return true;
                     case 2:  // attribute key
                     case 4:  // close tag
                     case 7:  // open tag
@@ -113,6 +110,10 @@ bool xmlparser_feed(XmlParser *p, char ch)
                         return true;
                     case 20:
                         p->token = CLOSE_TAG;
+                        p->length = p->count - p->start - 1;
+                        return true;
+                    case 22:
+                        p->token = TEXT;
                         p->length = p->count - p->start - 1;
                         return true;
                     default:

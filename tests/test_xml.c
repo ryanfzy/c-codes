@@ -158,14 +158,13 @@ START_TEST(test_2)
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
-    ck_assert_msg(n == 3, "Wrong number of tokens found.\n");
+    ck_assert_msg(n == 2, "Wrong number of tokens found.\n");
     ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
     CK_ASSERT_INT_EQ(1, results[0].start);
     CK_ASSERT_INT_EQ(3, results[0].length);
-    ck_assert_msg(results[1].token == TEXT, "Wrong token found.\n");  //TODO: remove
-    ck_assert_msg(results[2].token == CLOSE_TAG, "Wrong token found.\n");
-    CK_ASSERT_INT_EQ(7, results[2].start);
-    CK_ASSERT_INT_EQ(3, results[2].length);
+    ck_assert_msg(results[1].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(7, results[1].start);
+    CK_ASSERT_INT_EQ(3, results[1].length);
 }
 END_TEST
 
@@ -465,7 +464,7 @@ START_TEST(test_8)
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
-    ck_assert_msg(n == 11, "Wrong number of tokens found.\n");
+    ck_assert_msg(n == 9, "Wrong number of tokens found.\n");
     ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
     CK_ASSERT_INT_EQ(1, results[0].start);
     CK_ASSERT_INT_EQ(3, results[0].length);
@@ -481,20 +480,18 @@ START_TEST(test_8)
     ck_assert_msg(results[4].token == ATTR_VAL, "Wrong token found.\n");
     CK_ASSERT_INT_EQ(25, results[4].start);
     CK_ASSERT_INT_EQ(6, results[4].length);
-    ck_assert_msg(results[5].token == TEXT, "Wrong token found.\n");
-    ck_assert_msg(results[6].token == OPEN_TAG, "Wrong token found.\n");
-    CK_ASSERT_INT_EQ(34, results[6].start);
-    CK_ASSERT_INT_EQ(6, results[6].length);
-    ck_assert_msg(results[7].token == TEXT, "Wrong token found.\n");
-    CK_ASSERT_INT_EQ(41, results[7].start);
-    CK_ASSERT_INT_EQ(4, results[7].length);
+    ck_assert_msg(results[5].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(34, results[5].start);
+    CK_ASSERT_INT_EQ(6, results[5].length);
+    ck_assert_msg(results[6].token == TEXT, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(41, results[6].start);
+    CK_ASSERT_INT_EQ(4, results[6].length);
+    ck_assert_msg(results[7].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(47, results[7].start);
+    CK_ASSERT_INT_EQ(6, results[7].length);
     ck_assert_msg(results[8].token == CLOSE_TAG, "Wrong token found.\n");
-    CK_ASSERT_INT_EQ(47, results[8].start);
-    CK_ASSERT_INT_EQ(6, results[8].length);
-    ck_assert_msg(results[9].token == TEXT, "Wrong token found.\n");
-    ck_assert_msg(results[10].token == CLOSE_TAG, "Wrong token found.\n");
-    CK_ASSERT_INT_EQ(56, results[10].start);
-    CK_ASSERT_INT_EQ(3, results[10].length);
+    CK_ASSERT_INT_EQ(56, results[8].start);
+    CK_ASSERT_INT_EQ(3, results[8].length);
 }
 END_TEST
 
@@ -563,36 +560,34 @@ START_TEST(test_10)
         }
     }
     ck_assert_msg(i == strlen(test_data), "Invalid char at index: %d\n", i);
-    ck_assert_msg(n == 11, "Wrong number of tokens found.\n");
+    ck_assert_msg(n == 9, "Wrong number of tokens found.\n");
     ck_assert_msg(results[0].token == OPEN_TAG, "Wrong token found.\n");
     CK_ASSERT_INT_EQ(1, results[0].start);
     CK_ASSERT_INT_EQ(3, results[0].length);
-    ck_assert_msg(results[1].token == TEXT, "Wrong token found.\n");
-    ck_assert_msg(results[2].token == OPEN_TAG, "Wrong token found.\n");
-    CK_ASSERT_INT_EQ(6, results[2].start);
-    CK_ASSERT_INT_EQ(6, results[2].length);
-    ck_assert_msg(results[3].token == ATTR_NAME, "Wrong token found.\n");
-    CK_ASSERT_INT_EQ(13, results[3].start);
-    CK_ASSERT_INT_EQ(4, results[3].length);
-    ck_assert_msg(results[4].token == ATTR_VAL, "Wrong token found.\n");
-    CK_ASSERT_INT_EQ(19, results[4].start);
+    ck_assert_msg(results[1].token == OPEN_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(6, results[1].start);
+    CK_ASSERT_INT_EQ(6, results[1].length);
+    ck_assert_msg(results[2].token == ATTR_NAME, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(13, results[2].start);
+    CK_ASSERT_INT_EQ(4, results[2].length);
+    ck_assert_msg(results[3].token == ATTR_VAL, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(19, results[3].start);
+    CK_ASSERT_INT_EQ(5, results[3].length);
+    ck_assert_msg(results[4].token == ATTR_NAME, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(26, results[4].start);
     CK_ASSERT_INT_EQ(5, results[4].length);
-    ck_assert_msg(results[5].token == ATTR_NAME, "Wrong token found.\n");
-    CK_ASSERT_INT_EQ(26, results[5].start);
-    CK_ASSERT_INT_EQ(5, results[5].length);
-    ck_assert_msg(results[6].token == ATTR_VAL, "Wrong token found.\n");
-    CK_ASSERT_INT_EQ(33, results[6].start);
-    CK_ASSERT_INT_EQ(6, results[6].length);
-    ck_assert_msg(results[7].token == TEXT, "Wrong token found.\n");
-    CK_ASSERT_INT_EQ(41, results[7].start);
-    CK_ASSERT_INT_EQ(7, results[7].length);
+    ck_assert_msg(results[5].token == ATTR_VAL, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(33, results[5].start);
+    CK_ASSERT_INT_EQ(6, results[5].length);
+    ck_assert_msg(results[6].token == TEXT, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(41, results[6].start);
+    CK_ASSERT_INT_EQ(7, results[6].length);
+    ck_assert_msg(results[7].token == CLOSE_TAG, "Wrong token found.\n");
+    CK_ASSERT_INT_EQ(50, results[7].start);
+    CK_ASSERT_INT_EQ(6, results[7].length);
     ck_assert_msg(results[8].token == CLOSE_TAG, "Wrong token found.\n");
-    CK_ASSERT_INT_EQ(50, results[8].start);
-    CK_ASSERT_INT_EQ(6, results[8].length);
-    ck_assert_msg(results[9].token == TEXT, "Wrong token found.\n");
-    ck_assert_msg(results[10].token == CLOSE_TAG, "Wrong token found.\n");
-    CK_ASSERT_INT_EQ(59, results[10].start);
-    CK_ASSERT_INT_EQ(3, results[10].length);
+    CK_ASSERT_INT_EQ(59, results[8].start);
+    CK_ASSERT_INT_EQ(3, results[8].length);
 }
 END_TEST
 
