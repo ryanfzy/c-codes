@@ -4,31 +4,33 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include "stack.h"
 
-typedef enum _XmlToken
+typedef enum _XmlTokenType
 {
     ER = -1,
     NONE = 0,
     TEXT,
-    OPEN_TAG,
-    CLOSE_TAG,
-    ATTR_NAME,
-    ATTR_VAL,
-    ATTR,
-} XmlToken;
+    LEFT_ANGLE,
+    RIGHT_ANGLE,
+    SLASH,
+    QUOTED_STRING,
+    EQUAL,
+    IDENTIFIER,
+} XmlTokenType;
 
-typedef struct _XmlParser
+typedef struct _XmlToken 
 {
-    int _row;
-    int _open_tag_start;
-    int _open_tag_length;
-    XmlToken token;
+    XmlTokenType type;
     int start;
     int length;
-    int count;
-} XmlParser;
+} XmlToken;
 
-void xmlparser_init(XmlParser*);
-bool xmlparser_feed(XmlParser *p, char ch);
+typedef long XmlParser;
 
+XmlParser xmlparser_create();
+void xmlparser_free(XmlParser);
+bool xmlparser_feed(XmlParser, char ch, XmlToken *token);
+
+bool xmlparser_feed_token(XmlParser, XmlToken *token);
 #endif
