@@ -32,5 +32,4 @@ XmlParser xmlparser_create();
 void xmlparser_free(XmlParser);
 bool xmlparser_feed(XmlParser, char ch, XmlToken *token);
 
-bool xmlparser_feed_token(XmlParser, XmlToken *token);
 #endif

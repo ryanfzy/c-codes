@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <check.h>
-#include "..\xml\xml.h"
+#include "..\xml\xmlparser.h"
 
 #define CK_ASSERT_INT_EQ(E,A) ck_assert_msg(E == A, "Expected %d, but actual %d.\n", E, A)
 #define CK_ASSERT_STR_EQ(E,A) ck_assert_msg(strcmp(E, A) == 0, "Expected %s, but actual %s.\n", E, A)
@@ -78,11 +78,7 @@ START_TEST(test_1_1)
     XmlParser parser = xmlparser_create();
     for (int i = 0; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
-        {
-            if (token.type != NONE)
-                CK_ASSERT_TRUE(xmlparser_feed_token(parser, &token));
-        }
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
     }
     xmlparser_free(parser);
 }
@@ -95,11 +91,7 @@ START_TEST(test_1_2)
     XmlParser parser = xmlparser_create();
     for (int i = 0; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
-        {
-            if (token.type != NONE)
-                CK_ASSERT_TRUE(xmlparser_feed_token(parser, &token));
-        }
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
     }
     xmlparser_free(parser);
 }
@@ -112,11 +104,7 @@ START_TEST(test_1_3)
     XmlParser parser = xmlparser_create();
     for (int i = 0; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
-        {
-            if (token.type != NONE)
-                CK_ASSERT_TRUE(xmlparser_feed_token(parser, &token));
-        }
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
     }
     xmlparser_free(parser);
 }
@@ -129,11 +117,7 @@ START_TEST(test_2)
     XmlParser parser = xmlparser_create();
     for (int i = 0; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
-        {
-            if (token.type != NONE)
-                CK_ASSERT_TRUE(xmlparser_feed_token(parser, &token));
-        }
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
     }
     xmlparser_free(parser);
 }
@@ -146,11 +130,7 @@ START_TEST(test_3)
     XmlParser parser = xmlparser_create();
     for (int i = 0; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
-        {
-            if (token.type != NONE)
-                CK_ASSERT_TRUE(xmlparser_feed_token(parser, &token));
-        }
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
     }
     xmlparser_free(parser);
 }
@@ -163,11 +143,7 @@ START_TEST(test_4)
     XmlParser parser = xmlparser_create();
     for (int i = 0; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
-        {
-            if (token.type != NONE)
-                CK_ASSERT_TRUE(xmlparser_feed_token(parser, &token));
-        }
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
     }
     xmlparser_free(parser);
 }
@@ -180,11 +156,7 @@ START_TEST(test_4_1)
     XmlParser parser = xmlparser_create();
     for (int i = 0; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
-        {
-            if (token.type != NONE)
-                CK_ASSERT_TRUE(xmlparser_feed_token(parser, &token));
-        }
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
     }
     xmlparser_free(parser);
 }
@@ -197,11 +169,7 @@ START_TEST(test_5)
     XmlParser parser = xmlparser_create();
     for (int i = 0; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
-        {
-            if (token.type != NONE)
-                CK_ASSERT_TRUE(xmlparser_feed_token(parser, &token));
-        }
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
     }
     xmlparser_free(parser);
 }
@@ -214,11 +182,7 @@ START_TEST(test_6)
     XmlParser parser = xmlparser_create();
     for (int i = 0; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
-        {
-            if (token.type != NONE)
-                CK_ASSERT_TRUE(xmlparser_feed_token(parser, &token));
-        }
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
     }
     xmlparser_free(parser);
 }
@@ -231,11 +195,7 @@ START_TEST(test_6_1)
     XmlParser parser = xmlparser_create();
     for (int i = 0; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
-        {
-            if (token.type != NONE)
-                CK_ASSERT_TRUE(xmlparser_feed_token(parser, &token));
-        }
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
     }
     xmlparser_free(parser);
 }
@@ -248,11 +208,7 @@ START_TEST(test_7)
     XmlParser parser = xmlparser_create();
     for (int i = 0; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
-        {
-            if (token.type != NONE)
-                CK_ASSERT_TRUE(xmlparser_feed_token(parser, &token));
-        }
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
     }
     xmlparser_free(parser);
 }
@@ -265,11 +221,7 @@ START_TEST(test_8)
     XmlParser parser = xmlparser_create();
     for (int i = 0; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
-        {
-            if (token.type != NONE)
-                CK_ASSERT_TRUE(xmlparser_feed_token(parser, &token));
-        }
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
     }
     xmlparser_free(parser);
 }
@@ -302,11 +254,7 @@ START_TEST(test_10)
     XmlParser parser = xmlparser_create();
     for (int i = 0; i < strlen(test_data); ++i)
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
-        {
-            if (token.type != NONE)
-                CK_ASSERT_TRUE(xmlparser_feed_token(parser, &token));
-        }
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
     }
     xmlparser_free(parser);
 }

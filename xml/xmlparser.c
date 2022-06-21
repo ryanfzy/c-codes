@@ -1,5 +1,5 @@
 #include <ctype.h>
-#include "xml.h"
+#include "xmlparser.h"
 
 #define _PUSH(s, e) { int _e = e; stack_push(s, (char*)&_e, sizeof(int)); }
 #define _POP(s, e) stack_pop(s, (char*)e, sizeof(int))
@@ -111,7 +111,7 @@ void xmlparser_free(XmlParser parser)
     }
 }
 
-static bool _feed(_XmlParser *p, char ch, XmlToken *token)
+static bool _feed_char(_XmlParser *p, char ch, XmlToken *token)
 {
     int i = _char2col(ch);
     int prev_row = p->_row;
@@ -124,29 +124,7 @@ static bool _feed(_XmlParser *p, char ch, XmlToken *token)
     token->type = NONE;
     if (p->_row < -1)
     {
-        switch (p->_row)
-        {
-            case -2:
-                token->type = LEFT_ANGLE;
-                break;
-            case -3:
-                token->type = RIGHT_ANGLE;
-                break;
-            case -4:
-                token->type = SLASH;
-                break;
-            case -5:
-                token->type = QUOTED_STRING;
-                break;
-            case -6:
-                token->type = EQUAL;
-                break;
-            case -7:
-                token->type = IDENTIFIER;
-                break;
-            default:
-                break;
-        }
+        token->type = abs(p->_row);
         token->start = p->_start;
         token->length = p->_count - p->_start - 1;
         p->_row = _token_table[0][i];
@@ -157,62 +135,69 @@ static bool _feed(_XmlParser *p, char ch, XmlToken *token)
     return true;
 }
 
+static bool _feed(_XmlParser *p, char ch, XmlToken *token)
+{
+    p->_count++;
+    if (p->_parse_tag)
+    {
+        bool ret = _feed_char(p, ch, token);
+        if (token->type == RIGHT_ANGLE)
+            p->_parse_tag = false;
+        return ret;
+    }
+    else if (ch == '<')
+    {
+        p->_parse_tag = true;
+        _feed_char(p, ch, token);
+        if (p->_found_text)
+        {
+            token->type = TEXT;
+            return true;
+        }
+    } 
+    p->_found_text = true;
+    token->type = NONE;
+    return true;
+}
+
+static bool _feed_token(_XmlParser *p, XmlToken *token)
+{
+    int expr;
+    if (_POP(&p->_stack, &expr))
+    {
+        if (expr >= XML)
+        {
+            int next_expr = _expr_table[expr - XML][token->type - TEXT];
+            if (next_expr != ER)
+            {
+                int *expr_tokens = _expr_list[next_expr];
+                for (int i = expr_tokens[0]; i > 0; i--)
+                    _PUSH(&p->_stack, expr_tokens[i]);
+                return _feed_token(p, token);
+            }
+        }
+        else if (expr == EMPTY)
+        {
+            return _feed_token(p, token);
+        }
+        else
+        {
+            return expr == token->type;
+        }
+    }
+    return false;
+}
+
 bool xmlparser_feed(XmlParser parser, char ch, XmlToken *token)
 {
     _XmlParser *p = (_XmlParser*)parser;
     if (p != NULL && token != NULL)
     {
-        p->_count++;
-        if (p->_parse_tag)
+        if (_feed(p, ch, token))
         {
-            bool ret = _feed(p, ch, token);
-            if (token->type == RIGHT_ANGLE)
-                p->_parse_tag = false;
-            return ret;
-        }
-        else if (ch == '<')
-        {
-            p->_parse_tag = true;
-            _feed(p, ch, token);
-            if (p->_found_text)
-            {
-                token->type = TEXT;
-                return true;
-            }
-        } 
-        p->_found_text = true;
-        token->type = NONE;
-    }
-    return true;
-}
-
-bool xmlparser_feed_token(XmlParser parser, XmlToken *token)
-{
-    _XmlParser *p = (_XmlParser*)parser;
-    if (p != NULL && token != NULL)
-    {
-        int expr;
-        if (_POP(&p->_stack, &expr))
-        {
-            if (expr >= XML)
-            {
-                int next_expr = _expr_table[expr - XML][token->type - TEXT];
-                if (next_expr != ER)
-                {
-                    int *expr_tokens = _expr_list[next_expr];
-                    for (int i = expr_tokens[0]; i > 0; i--)
-                        _PUSH(&p->_stack, expr_tokens[i]);
-                    return xmlparser_feed_token(parser, token);
-                }
-            }
-            else if (expr == EMPTY)
-            {
-                return xmlparser_feed_token(parser, token);
-            }
-            else
-            {
-                return expr == token->type;
-            }
+            if (token->type != NONE)
+                return _feed_token(p, token);
+            return true;
         }
     }
     return false;
