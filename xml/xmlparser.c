@@ -12,6 +12,10 @@ typedef struct __XmlParser
     int _count;
     int _start;
     Stack _stack;
+    on_start_tag _start_tag_fn;
+    on_close_tag _close_tag_fn;
+    on_attr _attr_fn;
+    on_text _text_fn;
 } _XmlParser;
 
 typedef enum _ExprType
@@ -21,19 +25,33 @@ typedef enum _ExprType
     EL,
     EL1,
     EL2,
+    EL3,
+    EL4,
     AL,
     ATTR,
     VAL,
 } ExprType;
 
-static int _expr_list[11][10] =
+typedef enum _SemType
+{
+    START_TAG = 200,
+    CLOSE_TAG,
+    ATTR_KEY,
+    ATTR_VAL,
+    STEXT,
+} SemType;
+
+static int _expr_list[14][10] =
 {
     {1, EL},
-    {4, LEFT_ANGLE, IDENTIFIER, AL, EL1},
+    {2, LEFT_ANGLE, EL1},
+    {4, IDENTIFIER, START_TAG, AL, EL2},
     {2, SLASH, RIGHT_ANGLE},
-    {6, RIGHT_ANGLE, EL2, LEFT_ANGLE, SLASH, IDENTIFIER, RIGHT_ANGLE},
-    {1, EL},
-    {1, TEXT},
+    {2, RIGHT_ANGLE, EL3},
+    {2, LEFT_ANGLE, EL4},
+    {4, TEXT, STEXT, LEFT_ANGLE, EL4},
+    {4, IDENTIFIER, START_TAG, AL, EL2},
+    {5, SLASH, IDENTIFIER, CLOSE_TAG, RIGHT_ANGLE, EL3},
     {2, ATTR, AL},
     {1, EMPTY},
     {2, IDENTIFIER, VAL},
@@ -41,15 +59,17 @@ static int _expr_list[11][10] =
     {1, EMPTY},
 };
 
-static int _expr_table[7][7] =
+static int _expr_table[9][7] =
 {
     {ER, 0, ER, ER, ER, ER, ER},
     {ER, 1, ER, ER, ER, ER, ER},
-    {ER, ER, 3, 2,  ER, ER ,ER},
-    {5,  4, ER, ER, ER, ER, ER},
-    {ER, ER, 7, 7,  ER, ER, 6 },
-    {ER, ER, ER, ER, ER, ER, 8},
-    {ER, ER, 10, 10, ER, 9, 10},
+    {ER, ER, ER, ER, ER, ER, 2},
+    {ER, ER, 4,  3, ER, ER, ER},
+    {6,  5, ER, ER, ER, ER, ER},
+    {ER, ER, ER, 8, ER, ER,  7},
+    {ER, ER, 10, 10, ER, ER, 9},
+    {ER, ER, ER, ER, ER, ER,11},
+    {ER, ER, 13, 13, ER, 12,13},
 };
 
 static int _token_table[8][7] =
@@ -79,10 +99,14 @@ static int _char2col(char ch)
 void _xmlparser_init(_XmlParser *p)
 {
     p->_row = 0;
-    p->_count = 0;
     p->_start = 0;
+    p->_found_text = false;
     stack_init(&p->_stack);
     _PUSH(&p->_stack, EL);
+    p->_start_tag_fn = NULL;
+    p->_close_tag_fn = NULL;
+    p->_attr_fn = NULL;
+    p->_text_fn = NULL;
 }
 
 void _xmlparser_destroy(_XmlParser *p)
@@ -93,12 +117,30 @@ void _xmlparser_destroy(_XmlParser *p)
     }
 }
 
-XmlParser xmlparser_create()
+static _XmlParser* _create()
 {
     _XmlParser *p = (_XmlParser*)malloc(sizeof(_XmlParser));
     if (p != NULL)
         _xmlparser_init(p);
-    return (long)p;
+    return p;
+}
+
+XmlParser xmlparser_create()
+{
+    return (long)_create();
+}
+
+void xmlparser_set_listners(XmlParser parser, on_start_tag start_fn, on_attr attr_fn, on_text text_fn, on_close_tag close_fn)
+{
+    
+    _XmlParser *p = (_XmlParser*)parser;
+    if (p != NULL)
+    {
+        p->_start_tag_fn = start_fn;
+        p->_close_tag_fn = close_fn;
+        p->_attr_fn = attr_fn;
+        p->_text_fn = text_fn;
+    }
 }
 
 void xmlparser_free(XmlParser parser)
@@ -111,7 +153,7 @@ void xmlparser_free(XmlParser parser)
     }
 }
 
-static bool _feed_char(_XmlParser *p, char ch, XmlToken *token)
+static bool _feed_char(_XmlParser *p, char ch, int index, XmlToken *token)
 {
     int i = _char2col(ch);
     int prev_row = p->_row;
@@ -126,35 +168,43 @@ static bool _feed_char(_XmlParser *p, char ch, XmlToken *token)
     {
         token->type = abs(p->_row);
         token->start = p->_start;
-        token->length = p->_count - p->_start - 1;
+        token->length = index - p->_start - 1;
         p->_row = _token_table[0][i];
         prev_row = 0;
     }
     if (prev_row == 0 && p->_row > 0)
-        p->_start = p->_count -1;
+        p->_start = index -1;
     return true;
 }
 
-static bool _feed(_XmlParser *p, char ch, XmlToken *token)
+static bool _feed(_XmlParser *p, char ch, int *index, XmlToken *token)
 {
-    p->_count++;
+    (*index)++;
     if (p->_parse_tag)
     {
-        bool ret = _feed_char(p, ch, token);
+        bool ret = _feed_char(p, ch, *index, token);
         if (token->type == RIGHT_ANGLE)
+        {
             p->_parse_tag = false;
+            (*index)--;
+            p->_row = 0;
+        }
         return ret;
     }
     else if (ch == '<')
     {
         p->_parse_tag = true;
-        _feed_char(p, ch, token);
+        int start = p->_start;
+        _feed_char(p, ch, *index, token);
         if (p->_found_text)
         {
+            p->_found_text = false;
             token->type = TEXT;
-            return true;
+            token->start = start;
+            token->length = *index - start - 1;
         }
-    } 
+        return true;
+    }
     p->_found_text = true;
     token->type = NONE;
     return true;
@@ -165,7 +215,34 @@ static bool _feed_token(_XmlParser *p, XmlToken *token)
     int expr;
     if (_POP(&p->_stack, &expr))
     {
-        if (expr >= XML)
+        if (expr >= 200)
+        {
+            switch (expr)
+            {
+                case START_TAG:
+                    if (p->_start_tag_fn != NULL)
+                    {
+                        p->_start_tag_fn(token);
+                        break;
+                    }
+                case STEXT:
+                    if (p->_text_fn != NULL)
+                    {
+                        p->_text_fn(token);
+                        break;
+                    }
+                case CLOSE_TAG:
+                    if (p->_close_tag_fn != NULL)
+                    {
+                        p->_close_tag_fn(token);
+                        break;
+                    }
+                default:
+                    break;
+            }
+            return _feed_token(p, token);
+        }
+        else if (expr >= XML)
         {
             int next_expr = _expr_table[expr - XML][token->type - TEXT];
             if (next_expr != ER)
@@ -188,12 +265,12 @@ static bool _feed_token(_XmlParser *p, XmlToken *token)
     return false;
 }
 
-bool xmlparser_feed(XmlParser parser, char ch, XmlToken *token)
+bool xmlparser_feed(XmlParser parser, char ch, int *index, XmlToken *token)
 {
     _XmlParser *p = (_XmlParser*)parser;
-    if (p != NULL && token != NULL)
+    if (p != NULL && token != NULL && index != NULL)
     {
-        if (_feed(p, ch, token))
+        if (_feed(p, ch, index, token))
         {
             if (token->type != NONE)
                 return _feed_token(p, token);

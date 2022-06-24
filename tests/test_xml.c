@@ -26,19 +26,15 @@ START_TEST(test_1)
     int i = 0, n = 0;
     XmlToken token = { 0 };
     XmlParser parser = xmlparser_create();
-    for (; i < strlen(test_data); ++i)
+    while (i < strlen(test_data))
     {
-        if (xmlparser_feed(parser, test_data[i], &token))
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &i, &token));
+        if (token. type != NONE)
         {
-            if (token. type != NONE)
-            {
-                results[n].token = token;
-                s_memcpy(results[n].text, test_data+token.start, token.length);
-                n++;
-            }
+            results[n].token = token;
+            s_memcpy(results[n].text, test_data+token.start, token.length);
+            n++;
         }
-        else
-            break;
     }
     xmlparser_free(parser);
 
@@ -76,9 +72,10 @@ START_TEST(test_1_1)
     char *test_data = "<tag /> ";
     XmlToken token = { 0 };
     XmlParser parser = xmlparser_create();
-    for (int i = 0; i < strlen(test_data); ++i)
+    int i = 0;
+    while (i < strlen(test_data))
     {
-        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &i, &token));
     }
     xmlparser_free(parser);
 }
@@ -89,9 +86,10 @@ START_TEST(test_1_2)
     char *test_data = "<tag attr /> ";
     XmlToken token = { 0 };
     XmlParser parser = xmlparser_create();
-    for (int i = 0; i < strlen(test_data); ++i)
+    int i = 0;
+    while (i < strlen(test_data))
     {
-        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &i, &token));
     }
     xmlparser_free(parser);
 }
@@ -102,9 +100,10 @@ START_TEST(test_1_3)
     char *test_data = "<tag attr=\"val\" /> ";
     XmlToken token = { 0 };
     XmlParser parser = xmlparser_create();
-    for (int i = 0; i < strlen(test_data); ++i)
+    int i = 0;
+    while (i < strlen(test_data))
     {
-        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &i, &token));
     }
     xmlparser_free(parser);
 }
@@ -115,9 +114,10 @@ START_TEST(test_2)
     char *test_data = "<tag></tag> ";
     XmlToken token = { 0 };
     XmlParser parser = xmlparser_create();
-    for (int i = 0; i < strlen(test_data); ++i)
+    int i = 0;
+    while (i < strlen(test_data))
     {
-        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &i, &token));
     }
     xmlparser_free(parser);
 }
@@ -128,9 +128,10 @@ START_TEST(test_3)
     char *test_data = "<tag>text</tag> ";
     XmlToken token = { 0 };
     XmlParser parser = xmlparser_create();
-    for (int i = 0; i < strlen(test_data); ++i)
+    int i = 0;
+    while (i < strlen(test_data))
     {
-        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &i, &token));
     }
     xmlparser_free(parser);
 }
@@ -141,9 +142,10 @@ START_TEST(test_4)
     char *test_data = "<tag attr>text</tag> ";
     XmlToken token = { 0 };
     XmlParser parser = xmlparser_create();
-    for (int i = 0; i < strlen(test_data); ++i)
+    int i = 0;
+    while (i < strlen(test_data))
     {
-        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &i, &token));
     }
     xmlparser_free(parser);
 }
@@ -154,9 +156,10 @@ START_TEST(test_4_1)
     char *test_data = "<tag attr attr2>text</tag> ";
     XmlToken token = { 0 };
     XmlParser parser = xmlparser_create();
-    for (int i = 0; i < strlen(test_data); ++i)
+    int i = 0;
+    while (i < strlen(test_data))
     {
-        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &i, &token));
     }
     xmlparser_free(parser);
 }
@@ -167,9 +170,10 @@ START_TEST(test_5)
     char *test_data = "<tag attr=\"value\">text</tag> ";
     XmlToken token = { 0 };
     XmlParser parser = xmlparser_create();
-    for (int i = 0; i < strlen(test_data); ++i)
+    int i = 0;
+    while (i < strlen(test_data))
     {
-        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &i, &token));
     }
     xmlparser_free(parser);
 }
@@ -180,9 +184,10 @@ START_TEST(test_6)
     char *test_data = "<tag attr=\"value\" attr2>text</tag> ";
     XmlToken token = { 0 };
     XmlParser parser = xmlparser_create();
-    for (int i = 0; i < strlen(test_data); ++i)
+    int i = 0;
+    while (i < strlen(test_data))
     {
-        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &i, &token));
     }
     xmlparser_free(parser);
 }
@@ -193,9 +198,10 @@ START_TEST(test_6_1)
     char *test_data = "<tag attr attr2=\"value\">text</tag> ";
     XmlToken token = { 0 };
     XmlParser parser = xmlparser_create();
-    for (int i = 0; i < strlen(test_data); ++i)
+    int i = 0;
+    while (i < strlen(test_data))
     {
-        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &i, &token));
     }
     xmlparser_free(parser);
 }
@@ -206,9 +212,10 @@ START_TEST(test_7)
     char *test_data = "<tag attr=\"value\" attr2=\"value2\">text</tag> ";
     XmlToken token = { 0 };
     XmlParser parser = xmlparser_create();
-    for (int i = 0; i < strlen(test_data); ++i)
+    int i = 0;
+    while (i < strlen(test_data))
     {
-        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &i, &token));
     }
     xmlparser_free(parser);
 }
@@ -219,9 +226,10 @@ START_TEST(test_8)
     char *test_data = "<tag attr=\"value\" attr2=\"value2\"><subtag>text</subtag></tag> ";
     XmlToken token = { 0 };
     XmlParser parser = xmlparser_create();
-    for (int i = 0; i < strlen(test_data); ++i)
+    int i = 0;
+    while (i < strlen(test_data))
     {
-        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &i, &token));
     }
     xmlparser_free(parser);
 }
@@ -252,11 +260,51 @@ START_TEST(test_10)
     char *test_data = "<tag><subtag attr=\"value\" attr2=\"value2\">subtext</subtag></tag> ";
     XmlToken token = { 0 };
     XmlParser parser = xmlparser_create();
-    for (int i = 0; i < strlen(test_data); ++i)
+    int i = 0;
+    while (i < strlen(test_data))
     {
-        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &token));
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &i, &token));
     }
     xmlparser_free(parser);
+}
+END_TEST
+
+START_TEST(test_11)
+{
+    int start_tag_found = 0;
+    int close_tag_found = 0;
+    int attr_found = 0;
+    int text_found = 0;
+    void on_start_found(XmlToken *t)
+    {
+        start_tag_found++;
+    }
+    void on_close_found(XmlToken *t)
+    {
+        close_tag_found++;
+    }
+    void on_attr_found(XmlToken *k, XmlToken *v)
+    {
+        attr_found++;
+    }
+    void on_text_found(XmlToken *t)
+    {
+        text_found++;
+    }
+    char *test_data = "<tag><subtag>subtext</subtag></tag> ";
+    XmlToken token = { 0 };
+    XmlParser parser = xmlparser_create();
+    xmlparser_set_listners(parser, on_start_found, on_attr_found, on_text_found, on_close_found);
+    int i = 0;
+    while (i < strlen(test_data))
+    {
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &i, &token));
+    }
+    xmlparser_free(parser);
+    CK_ASSERT_INT_EQ(2, start_tag_found);
+    CK_ASSERT_INT_EQ(2, close_tag_found);
+    CK_ASSERT_INT_EQ(0, attr_found);
+    CK_ASSERT_INT_EQ(1, text_found);
 }
 END_TEST
 
@@ -279,6 +327,7 @@ Suite* make_add_suit(void)
     tcase_add_test(tc_xml, test_8);
     //tcase_add_test(tc_xml, test_9);
     tcase_add_test(tc_xml, test_10);
+    tcase_add_test(tc_xml, test_11);
     suite_add_tcase(s, tc_xml);
     return s;
 }
