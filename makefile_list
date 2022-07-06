@@ -1,0 +1,24 @@
+OBJDIR = obj
+BINDIR = bin
+OBJECTS = $(OBJDIR)/test_list.o $(OBJDIR)/list.o $(OBJDIR)/structs.o
+
+CHECK_LIB = -LC:\check-0.15.2.tar\check-0.15.2\src\.libs -lcheck
+CHECK_INC = -I C:\check-0.15.2.tar\check-0.15.2 -IC:\check-0.15.2.tar\check-0.15.2\src
+
+STD_OPTS = -Wall -std=c99 -Iinclude -c $< -o $@
+
+$(BINDIR)/test_list.exe : $(OBJECTS) | $(BINDIR)
+	gcc -Wall -o $@ $(OBJECTS) $(CHECK_LIB)
+$(OBJDIR)/list.o : containers/list.c
+	gcc $(STD_OPTS)
+$(OBJDIR)/structs.o : containers/structs.c
+	gcc $(STD_OPTS)
+$(OBJDIR)/test_list.o : tests/test_list.c
+	gcc $(CHECK_INC) $(STD_OPTS)
+
+$(OBJECTS): | $(OBJDIR)
+$(OBJDIR):
+	mkdir $(OBJDIR)
+
+$(BINDIR):
+	mkdir $(BINDIR)

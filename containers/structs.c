@@ -106,3 +106,31 @@ void keyedNode_destroy(KeyedNode *pNode)
         pNode->iDataSize = 0;
     }
 }
+
+
+BidNode* bidnode_create(char *data, size_t size)
+{
+    if (data != NULL && size > 0)
+    {
+        BidNode *node = malloc(sizeof(BidNode));
+        if (node != NULL)
+        {
+            node->next = NULL;
+            node->prev = NULL;
+            node->size = size;
+            node->data = malloc(node->size);
+            memcpy(node->data, data, node->size);
+        }
+        return node;
+    }
+    return NULL;
+}
+
+void bidnode_free(BidNode *node)
+{
+    if (node != NULL)
+    {
+        free(node->data);
+        free(node);
+    }
+}
