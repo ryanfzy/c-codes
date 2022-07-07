@@ -1,5 +1,7 @@
 #include <ctype.h>
 #include "xmlparser.h"
+#include "stack.h"
+#include "list.h"
 
 #define _PUSH(s, e) { int _e = e; stack_push(s, (char*)&_e, sizeof(int)); }
 #define _POP(s, e) stack_pop(s, (char*)e, sizeof(int))
@@ -12,6 +14,7 @@ typedef struct __XmlParser
     int _count;
     int _start;
     Stack _stack;
+    List _tokens;
     on_start_tag _start_tag_fn;
     on_close_tag _close_tag_fn;
     on_attr _attr_fn;
@@ -37,7 +40,7 @@ typedef enum _SemType
     START_TAG = 200,
     CLOSE_TAG,
     ATTR_KEY,
-    ATTR_VAL,
+    ATTR_KEY_VAL,
     STEXT,
 } SemType;
 
@@ -55,8 +58,8 @@ static int _expr_list[14][10] =
     {2, ATTR, AL},
     {1, EMPTY},
     {2, IDENTIFIER, VAL},
-    {2, EQUAL, QUOTED_STRING},
-    {1, EMPTY},
+    {3, EQUAL, QUOTED_STRING, ATTR_KEY_VAL},
+    {2, ATTR_KEY, EMPTY},
 };
 
 static int _expr_table[9][7] =
@@ -103,6 +106,7 @@ void _xmlparser_init(_XmlParser *p)
     p->_found_text = false;
     stack_init(&p->_stack);
     _PUSH(&p->_stack, EL);
+    list_init(&p->_tokens);
     p->_start_tag_fn = NULL;
     p->_close_tag_fn = NULL;
     p->_attr_fn = NULL;
@@ -114,6 +118,7 @@ void _xmlparser_destroy(_XmlParser *p)
     if (p != NULL)
     {
         stack_destroy(&p->_stack);
+        list_destroy(&p->_tokens);
     }
 }
 
@@ -222,19 +227,37 @@ static bool _feed_token(_XmlParser *p, XmlToken *token)
                 case START_TAG:
                     if (p->_start_tag_fn != NULL)
                     {
-                        p->_start_tag_fn(token);
+                        XmlToken *t = (XmlToken*)list_get(&p->_tokens, -1);
+                        p->_start_tag_fn(t);
+                        break;
+                    }
+                case ATTR_KEY:
+                    if (p->_attr_fn != NULL)
+                    {
+                        XmlToken *t = (XmlToken*)list_get(&p->_tokens, -1);
+                        p->_attr_fn(t, NULL);
+                        break;
+                    }
+                case ATTR_KEY_VAL:
+                    if (p->_attr_fn != NULL)
+                    {
+                        XmlToken *k = (XmlToken*)list_get(&p->_tokens, -3);
+                        XmlToken *v = (XmlToken*)list_get(&p->_tokens, -1);
+                        p->_attr_fn(k, v);
                         break;
                     }
                 case STEXT:
                     if (p->_text_fn != NULL)
                     {
-                        p->_text_fn(token);
+                        XmlToken *t = (XmlToken*)list_get(&p->_tokens, -1);
+                        p->_text_fn(t);
                         break;
                     }
                 case CLOSE_TAG:
                     if (p->_close_tag_fn != NULL)
                     {
-                        p->_close_tag_fn(token);
+                        XmlToken *t = (XmlToken*)list_get(&p->_tokens, -1);
+                        p->_close_tag_fn(t);
                         break;
                     }
                 default:
@@ -254,13 +277,9 @@ static bool _feed_token(_XmlParser *p, XmlToken *token)
             }
         }
         else if (expr == EMPTY)
-        {
             return _feed_token(p, token);
-        }
         else
-        {
             return expr == token->type;
-        }
     }
     return false;
 }
@@ -273,7 +292,12 @@ bool xmlparser_feed(XmlParser parser, char ch, int *index, XmlToken *token)
         if (_feed(p, ch, index, token))
         {
             if (token->type != NONE)
-                return _feed_token(p, token);
+            {
+                if (_feed_token(p, token))
+                    list_add(&p->_tokens, (char*)token, sizeof(XmlToken));
+                else
+                    return false;
+            }
             return true;
         }
     }

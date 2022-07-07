@@ -271,27 +271,45 @@ END_TEST
 
 START_TEST(test_11)
 {
+    char *test_data = "<tag attr1><subtag attr2=\"val2\">subtext</subtag></tag> ";
     int start_tag_found = 0;
+    Result start_tags[2];
     int close_tag_found = 0;
+    Result close_tags[2];
     int attr_found = 0;
+    Result attrs[4] = {0};
     int text_found = 0;
+    Result texts[1];
     void on_start_found(XmlToken *t)
     {
+        start_tags[start_tag_found].token = *t;
+        s_memcpy(start_tags[start_tag_found].text, test_data+t->start, t->length);
         start_tag_found++;
     }
     void on_close_found(XmlToken *t)
     {
+        close_tags[close_tag_found].token = *t;
+        s_memcpy(close_tags[close_tag_found].text, test_data+t->start, t->length);
         close_tag_found++;
     }
     void on_attr_found(XmlToken *k, XmlToken *v)
     {
+        int i = attr_found*2;
+        attrs[i].token = *k;
+        s_memcpy(attrs[i].text, test_data+k->start, k->length);
+        if (v != NULL)
+        {
+            attrs[i+1].token = *v;
+            s_memcpy(attrs[i+1].text, test_data+v->start, v->length);
+        }
         attr_found++;
     }
     void on_text_found(XmlToken *t)
     {
+        texts[text_found].token = *t;
+        s_memcpy(texts[text_found].text, test_data+t->start, t->length);
         text_found++;
     }
-    char *test_data = "<tag><subtag>subtext</subtag></tag> ";
     XmlToken token = { 0 };
     XmlParser parser = xmlparser_create();
     xmlparser_set_listners(parser, on_start_found, on_attr_found, on_text_found, on_close_found);
@@ -302,9 +320,20 @@ START_TEST(test_11)
     }
     xmlparser_free(parser);
     CK_ASSERT_INT_EQ(2, start_tag_found);
+    CK_ASSERT_STR_EQ("tag", start_tags[0].text);
+    CK_ASSERT_STR_EQ("subtag", start_tags[1].text);
     CK_ASSERT_INT_EQ(2, close_tag_found);
-    CK_ASSERT_INT_EQ(0, attr_found);
+    CK_ASSERT_STR_EQ("subtag", close_tags[0].text);
+    CK_ASSERT_STR_EQ("tag", close_tags[1].text);
+    CK_ASSERT_INT_EQ(2, attr_found);
+    CK_ASSERT_STR_EQ("attr1", attrs[0].text);
+    CK_ASSERT_INT_EQ(0, attrs[1].token.type);
+    CK_ASSERT_INT_EQ(0, attrs[1].token.start);
+    CK_ASSERT_INT_EQ(0, attrs[1].token.length);
+    CK_ASSERT_STR_EQ("attr2", attrs[2].text);
+    CK_ASSERT_STR_EQ("\"val2\"", attrs[3].text);
     CK_ASSERT_INT_EQ(1, text_found);
+    CK_ASSERT_STR_EQ("subtext", texts[0].text);
 }
 END_TEST
 

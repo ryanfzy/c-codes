@@ -1,6 +1,6 @@
 OBJDIR = obj
 BINDIR = bin
-OBJECTS = $(OBJDIR)/test_xml.o $(OBJDIR)/xmlparser.o $(OBJDIR)/structs.o $(OBJDIR)/stack.o
+OBJECTS = $(OBJDIR)/test_xml.o $(OBJDIR)/xmlparser.o $(OBJDIR)/structs.o $(OBJDIR)/stack.o $(OBJDIR)/list.o
 
 CHECK_LIB = -LC:\check-0.15.2.tar\check-0.15.2\src\.libs -lcheck
 CHECK_INC = -I C:\check-0.15.2.tar\check-0.15.2 -IC:\check-0.15.2.tar\check-0.15.2\src
@@ -14,6 +14,8 @@ $(OBJDIR)/xmlparser.o : xml/xmlparser.c
 $(OBJDIR)/structs.o : containers/structs.c
 	gcc $(STD_OPTS)
 $(OBJDIR)/stack.o : containers/stack.c
+	gcc $(STD_OPTS)
+$(OBJDIR)/list.o : containers/list.c
 	gcc $(STD_OPTS)
 $(OBJDIR)/test_xml.o : tests/test_xml.c xml/xmlparser.h
 	gcc $(CHECK_INC) $(STD_OPTS)
