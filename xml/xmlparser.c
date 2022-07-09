@@ -44,6 +44,23 @@ typedef enum _SemType
     STEXT,
 } SemType;
 
+/*
+                           first     follow
+XML -> EL                  <
+EL  -> <, EL1              <
+EL1 -> IDEN, AL, EL2       IDEN
+EL2 -> /, >                /
+EL2 -> >, EL3              >
+EL3 -> <, EL4              <
+EL3 -> TXT, <, EL4         TXT
+EL4 -> IDEN, AL, EL2       IDEN
+EL4 -> /, IDEN, >, EL3     /
+AL  -> ATTR, AL            IDEN
+AL  -> e                             /, >
+ATTR-> IDEN, VAL           IDEN
+VAL -> =, QS               =
+VAL -> e                             IDEN, /, >
+*/
 static int _expr_list[14][10] =
 {
     {1, EL},
@@ -178,7 +195,7 @@ static bool _feed_char(_XmlParser *p, char ch, int index, XmlToken *token)
         prev_row = 0;
     }
     if (prev_row == 0 && p->_row > 0)
-        p->_start = index -1;
+        p->_start = index - 1;
     return true;
 }
 
@@ -199,20 +216,66 @@ static bool _feed(_XmlParser *p, char ch, int *index, XmlToken *token)
     else if (ch == '<')
     {
         p->_parse_tag = true;
-        int start = p->_start;
-        _feed_char(p, ch, *index, token);
         if (p->_found_text)
         {
             p->_found_text = false;
             token->type = TEXT;
-            token->start = start;
-            token->length = *index - start - 1;
+            token->start = p->_start;
+            token->length = *index - p->_start - 1;
         }
+        else
+            token->type = NONE;
+        (*index)--;
         return true;
     }
     p->_found_text = true;
     token->type = NONE;
     return true;
+}
+
+static void _invoke_listners(_XmlParser *p, int expr)
+{
+    switch (expr)
+    {
+         case START_TAG:
+            if (p->_start_tag_fn != NULL)
+            {
+                XmlToken *t = (XmlToken*)list_get(&p->_tokens, -1);
+                p->_start_tag_fn(t);
+                break;
+            }
+        case ATTR_KEY:
+            if (p->_attr_fn != NULL)
+            {
+                XmlToken *t = (XmlToken*)list_get(&p->_tokens, -1);
+                p->_attr_fn(t, NULL);
+                break;
+            }
+        case ATTR_KEY_VAL:
+            if (p->_attr_fn != NULL)
+            {
+                XmlToken *k = (XmlToken*)list_get(&p->_tokens, -3);
+                XmlToken *v = (XmlToken*)list_get(&p->_tokens, -1);
+                p->_attr_fn(k, v);
+                break;
+            }
+        case STEXT:
+            if (p->_text_fn != NULL)
+            {
+                XmlToken *t = (XmlToken*)list_get(&p->_tokens, -1);
+                p->_text_fn(t);
+                break;
+            }
+        case CLOSE_TAG:
+            if (p->_close_tag_fn != NULL)
+            {
+                XmlToken *t = (XmlToken*)list_get(&p->_tokens, -1);
+                p->_close_tag_fn(t);
+                break;
+            }
+        default:
+            break;
+    }
 }
 
 static bool _feed_token(_XmlParser *p, XmlToken *token)
@@ -222,47 +285,7 @@ static bool _feed_token(_XmlParser *p, XmlToken *token)
     {
         if (expr >= 200)
         {
-            switch (expr)
-            {
-                case START_TAG:
-                    if (p->_start_tag_fn != NULL)
-                    {
-                        XmlToken *t = (XmlToken*)list_get(&p->_tokens, -1);
-                        p->_start_tag_fn(t);
-                        break;
-                    }
-                case ATTR_KEY:
-                    if (p->_attr_fn != NULL)
-                    {
-                        XmlToken *t = (XmlToken*)list_get(&p->_tokens, -1);
-                        p->_attr_fn(t, NULL);
-                        break;
-                    }
-                case ATTR_KEY_VAL:
-                    if (p->_attr_fn != NULL)
-                    {
-                        XmlToken *k = (XmlToken*)list_get(&p->_tokens, -3);
-                        XmlToken *v = (XmlToken*)list_get(&p->_tokens, -1);
-                        p->_attr_fn(k, v);
-                        break;
-                    }
-                case STEXT:
-                    if (p->_text_fn != NULL)
-                    {
-                        XmlToken *t = (XmlToken*)list_get(&p->_tokens, -1);
-                        p->_text_fn(t);
-                        break;
-                    }
-                case CLOSE_TAG:
-                    if (p->_close_tag_fn != NULL)
-                    {
-                        XmlToken *t = (XmlToken*)list_get(&p->_tokens, -1);
-                        p->_close_tag_fn(t);
-                        break;
-                    }
-                default:
-                    break;
-            }
+            _invoke_listners(p, expr);
             return _feed_token(p, token);
         }
         else if (expr >= XML)
