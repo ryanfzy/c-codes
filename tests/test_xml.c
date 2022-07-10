@@ -337,6 +337,98 @@ START_TEST(test_11)
 }
 END_TEST
 
+START_TEST(test_12)
+{
+    char *test_file_path = "..\\test files\\xml_test.txt";
+    FILE *fp = fopen(test_file_path, "rb");
+    int start_tag_found = 0;
+    Result start_tags[2];
+    int close_tag_found = 0;
+    Result close_tags[2];
+    int attr_found = 0;
+    Result attrs[4] = {0};
+    int text_found = 0;
+    Result texts[1];
+    void on_start_found(XmlToken *t)
+    {
+        start_tags[start_tag_found].token = *t;
+        int cur = ftell(fp);
+        fseek(fp, t->start, SEEK_SET);
+        fgets(start_tags[start_tag_found].text, t->length+1, fp);
+        fseek(fp, cur, SEEK_SET);
+        start_tag_found++;
+    }
+    void on_close_found(XmlToken *t)
+    {
+        close_tags[close_tag_found].token = *t;
+        int cur = ftell(fp);
+        fseek(fp, t->start, SEEK_SET);
+        fgets(close_tags[close_tag_found].text, t->length+1, fp);
+        fseek(fp, cur, SEEK_SET);
+        close_tag_found++;
+    }
+    void on_attr_found(XmlToken *k, XmlToken *v)
+    {
+        int i = attr_found*2;
+        attrs[i].token = *k;
+        int cur = ftell(fp);
+        fseek(fp, k->start, SEEK_SET);
+        fgets(attrs[i].text, k->length+1, fp);
+        if (v != NULL)
+        {
+            attrs[i+1].token = *v;
+            fseek(fp, v->start, SEEK_SET);
+            fgets(attrs[i+1].text, v->length+1, fp);
+        }
+        fseek(fp, cur, SEEK_SET);
+        attr_found++;
+    }
+    void on_text_found(XmlToken *t)
+    {
+        texts[text_found].token = *t;
+        int cur = ftell(fp);
+        fseek(fp, t->start, SEEK_SET);
+        fgets(texts[text_found].text, t->length+1, fp);
+        fseek(fp, cur, SEEK_SET);
+        text_found++;
+    }
+    XmlToken token = { 0 };
+    XmlParser parser = xmlparser_create();
+    xmlparser_set_listners(parser, on_start_found, on_attr_found, on_text_found, on_close_found);
+    int ch = 0;
+    int i = 0;
+    int j = 0;
+    while (EOF != (ch = fgetc(fp)))
+    {
+        j = ftell(fp);
+        CK_ASSERT_TRUE(xmlparser_feed(parser, ch, &i, &token));
+        if (i < j)
+        {
+            fseek(fp, i, SEEK_SET);
+        }
+    }
+    CK_ASSERT_TRUE(xmlparser_feed(parser, ' ', &i, &token));
+    fclose(fp);
+    xmlparser_free(parser);
+
+    CK_ASSERT_INT_EQ(2, start_tag_found);
+    CK_ASSERT_STR_EQ("tag", start_tags[0].text);
+    CK_ASSERT_STR_EQ("subtag", start_tags[1].text);
+    CK_ASSERT_INT_EQ(2, close_tag_found);
+    CK_ASSERT_STR_EQ("subtag", close_tags[0].text);
+    CK_ASSERT_STR_EQ("tag", close_tags[1].text);
+    CK_ASSERT_INT_EQ(2, attr_found);
+    CK_ASSERT_STR_EQ("attr1", attrs[0].text);
+    CK_ASSERT_INT_EQ(0, attrs[1].token.type);
+    CK_ASSERT_INT_EQ(0, attrs[1].token.start);
+    CK_ASSERT_INT_EQ(0, attrs[1].token.length);
+    CK_ASSERT_STR_EQ("attr2", attrs[2].text);
+    CK_ASSERT_STR_EQ("\"val2\"", attrs[3].text);
+    CK_ASSERT_INT_EQ(1, text_found);
+    CK_ASSERT_STR_EQ("subtext", texts[0].text);
+}
+END_TEST
+
 Suite* make_add_suit(void)
 {
     Suite *s = suite_create("xml");
@@ -357,6 +449,7 @@ Suite* make_add_suit(void)
     //tcase_add_test(tc_xml, test_9);
     tcase_add_test(tc_xml, test_10);
     tcase_add_test(tc_xml, test_11);
+    tcase_add_test(tc_xml, test_12);
     suite_add_tcase(s, tc_xml);
     return s;
 }

@@ -228,7 +228,14 @@ static bool _feed(_XmlParser *p, char ch, int *index, XmlToken *token)
         (*index)--;
         return true;
     }
-    p->_found_text = true;
+    if (!p->_found_text)
+    {
+        if (!isspace(ch))
+        {
+            p->_found_text = true;
+            p->_start = *index - 1;
+        }
+    }
     token->type = NONE;
     return true;
 }

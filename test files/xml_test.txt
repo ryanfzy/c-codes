@@ -1,0 +1,3 @@
+<tag attr1>
+  <subtag attr2="val2">subtext</subtag>
+</tag>
