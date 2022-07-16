@@ -1,5 +1,5 @@
 #ifndef TREE_H
-#define TREE
+#define TREE_H
 
 #include "structs.h"
 #include "list.h"
@@ -11,7 +11,7 @@ typedef struct _tree Tree;
 struct _tree
 {
     Tree *parent;
-    SList *pchildren;
+    List *pchildren;
     TreeNode *pnode;
 };
 
@@ -25,6 +25,6 @@ bool tree_has_children(Tree *ptree);
 int tree_children_count(Tree *ptree);
 Tree* tree_get_child(Tree *ptree, unsigned int ichild);
 char* tree_get_data(Tree *ptree);
-void tree_remove_child(Tree *parent, Tree *pchild);
+//void tree_remove_child(Tree *parent, Tree *pchild);
 
 #endif

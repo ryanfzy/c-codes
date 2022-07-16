@@ -49,7 +49,7 @@ typedef enum _SemType
 XML -> EL                  <
 EL  -> <, EL1              <
 EL1 -> IDEN, AL, EL2       IDEN
-EL2 -> /, >                /
+EL2 -> /, >, EL3           /
 EL2 -> >, EL3              >
 EL3 -> <, EL4              <
 EL3 -> TXT, <, EL4         TXT
