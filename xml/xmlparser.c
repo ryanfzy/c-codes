@@ -66,7 +66,7 @@ static int _expr_list[14][10] =
     {1, EL},
     {2, LEFT_ANGLE, EL1},
     {4, IDENTIFIER, START_TAG, AL, EL2},
-    {2, SLASH, RIGHT_ANGLE},
+    {3, SLASH, RIGHT_ANGLE, EL3},
     {2, RIGHT_ANGLE, EL3},
     {2, LEFT_ANGLE, EL4},
     {4, TEXT, STEXT, LEFT_ANGLE, EL4},
@@ -111,8 +111,8 @@ static int _char2col(char ch)
     if (ch == '/') return 2;
     if (ch == '"') return 3;
     if (ch == '=') return 4;
-    if (isalnum(ch)) return 5;
-    if (isspace(ch)) return 6;
+    if (isspace(ch)) return 6;  // intentional
+    if (isprint(ch)) return 5;
     return -1;
 }
 
@@ -326,9 +326,16 @@ bool xmlparser_feed(XmlParser parser, char ch, int *index, XmlToken *token)
                 if (_feed_token(p, token))
                     list_add(&p->_tokens, (char*)token, sizeof(XmlToken));
                 else
+                {
+                    printf("Error token: %d\n", token->type);
                     return false;
+                }
             }
             return true;
+        }
+        else
+        {
+            printf("Error char: %c\n", ch);
         }
     }
     return false;

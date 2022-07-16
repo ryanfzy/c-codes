@@ -123,6 +123,20 @@ START_TEST(test_2)
 }
 END_TEST
 
+START_TEST(test_2_1)
+{
+    char *test_data = "<tag><subtag/></tag> ";
+    XmlToken token = { 0 };
+    XmlParser parser = xmlparser_create();
+    int i = 0;
+    while (i < strlen(test_data))
+    {
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &i, &token));
+    }
+    xmlparser_free(parser);
+}
+END_TEST
+
 START_TEST(test_3)
 {
     char *test_data = "<tag>text</tag> ";
@@ -438,6 +452,7 @@ Suite* make_add_suit(void)
     tcase_add_test(tc_xml, test_1_2);
     tcase_add_test(tc_xml, test_1_3);
     tcase_add_test(tc_xml, test_2);
+    tcase_add_test(tc_xml, test_2_1);
     tcase_add_test(tc_xml, test_3);
     tcase_add_test(tc_xml, test_4);
     tcase_add_test(tc_xml, test_4_1);
