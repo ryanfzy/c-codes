@@ -2,79 +2,88 @@
 #include <string.h>
 #include "tree.h"
 
-Tree* tree_create(char *pdata, size_t isize)
+Tree* tree_create(char *data, size_t size)
 {
-    Tree *ptree = malloc(sizeof(Tree));
-    tree_init(ptree, pdata, isize);
-    return ptree;
+    Tree *tree = malloc(sizeof(Tree));
+    if (tree != NULL)
+        tree_init(tree, data, size);
+    return tree;
 }
 
-void tree_init(Tree *ptree, char *pdata, size_t isize)
+void tree_init(Tree *tree, char *data, size_t size)
 {
-    ptree->parent = NULL;
-    ptree->pchildren = NULL;
-    ptree->pnode = node_create(pdata, isize);
-}
-
-void tree_free(Tree *ptree)
-{
-    tree_destroy(ptree);
-    free(ptree);
-}
-
-void tree_destroy(Tree *ptree)
-{
-    if (tree_has_children(ptree))
+    if (tree != NULL && data != NULL && size > 0)
     {
-        int ichildren = tree_children_count(ptree);
-        for (int i = 0; i < ichildren; i++)
-            // don't use free, list_free will free the tree node
-            tree_destroy(tree_get_child(ptree, i));
-        list_free(ptree->pchildren);
-        ptree->pchildren = NULL;
+        tree->parent = NULL;
+        list_init(&tree->children);
+        tree->node = node_create(data, size);
     }
-    node_free(ptree->pnode);
-    ptree->pnode = NULL;
 }
 
-bool tree_has_children(Tree *ptree)
+void tree_free(Tree *tree)
 {
-    return tree_children_count(ptree) > 0;
+    if (tree != NULL)
+    {
+        tree_destroy(tree);
+        free(tree);
+    }
 }
 
-int tree_children_count(Tree *ptree)
+void tree_destroy(Tree *tree)
 {
-    if (ptree == NULL || ptree->pchildren == NULL)
-        return 0;
-    else
-        return ptree->pchildren->count;
+    if (tree != NULL)
+    {
+        if (tree_has_children(tree))
+        {
+            int count = tree_children_count(tree);
+            for (int i = 0; i < count; i++)
+                // don't use free, list_free will free the tree node
+                tree_destroy(tree_get_child(tree, i));
+            list_destroy(&tree->children);
+        }
+        node_free(tree->node);
+        tree->node = NULL;
+    }
 }
 
-Tree* tree_get_child(Tree *ptree, unsigned int ichild)
+bool tree_has_children(Tree *tree)
 {
-    if (ptree == NULL || ptree->pchildren == NULL || ptree->pchildren->count == 0)
-        return NULL;
-    else
-        return (Tree*)list_get(ptree->pchildren, ichild);
+    if (tree != NULL)
+        return tree_children_count(tree) > 0;
+    return false;
 }
 
-Tree* tree_add_child(Tree *ptree, char *pdata, size_t isize)
+int tree_children_count(Tree *tree)
 {
-    Tree child;
-    tree_init(&child, pdata, isize);
-    child.parent = ptree;
-    if (ptree->pchildren == NULL)
-        ptree->pchildren = list_create();
-    list_add(ptree->pchildren, (char*)&child, sizeof(Tree));
-    return tree_get_child(ptree, ptree->pchildren->count - 1);
+    if (tree != NULL)
+        return list_count(&tree->children);
+    return 0;
 }
 
-char* tree_get_data(Tree *ptree)
+Tree* tree_get_child(Tree *tree, unsigned int index)
 {
-    if (ptree == NULL || ptree->pnode == NULL)
-        return NULL;
-    else
-        return ptree->pnode->pdata;
+    if (tree != NULL)
+        return (Tree*)list_get(&tree->children, index);
+    return NULL;
+}
+
+Tree* tree_add_child(Tree *tree, char *data, size_t size)
+{
+    if (tree != NULL && data != NULL && size > 0)
+    {
+        Tree child;
+        tree_init(&child, data, size);
+        child.parent = tree;
+        return (Tree*)list_add(&tree->children, (char*)&child, sizeof(Tree));
+    }
+    return NULL;
+}
+
+char* tree_get_data(Tree *tree)
+{
+    if (tree != NULL && tree->node != NULL)
+        return tree->node->pdata;
+    return NULL;
 }
 
 /*

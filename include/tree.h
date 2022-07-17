@@ -6,25 +6,25 @@
 
 #define TreeNode Node
 
-typedef struct _tree Tree;
+typedef struct _Tree Tree;
 
-struct _tree
+typedef struct _Tree
 {
     Tree *parent;
-    List *pchildren;
-    TreeNode *pnode;
-};
+    List children;
+    TreeNode *node;
+} Tree;
 
-Tree* tree_create(char *pdata, size_t isize);
-void tree_free(Tree *ptree);
-void tree_init(Tree *ptree, char *pdata, size_t isize);
+Tree* tree_create(char *data, size_t size);
+void tree_free(Tree *tree);
+void tree_init(Tree *tree, char *data, size_t size);
 void tree_destroy(Tree *ptree);
 
-Tree* tree_add_child(Tree *ptree, char *pdata, size_t isize);
-bool tree_has_children(Tree *ptree);
-int tree_children_count(Tree *ptree);
-Tree* tree_get_child(Tree *ptree, unsigned int ichild);
-char* tree_get_data(Tree *ptree);
+Tree* tree_add_child(Tree *tree, char *data, size_t size);
+bool tree_has_children(Tree *tree);
+int tree_children_count(Tree *tree);
+Tree* tree_get_child(Tree *tree, unsigned int index);
+char* tree_get_data(Tree *tree);
 //void tree_remove_child(Tree *parent, Tree *pchild);
 
 #endif

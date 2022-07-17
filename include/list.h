@@ -18,7 +18,7 @@ void list_free(List *list);
 void list_init(List *list);
 void list_destroy(List *list);
 
-bool list_add(List *list, char *data, size_t size);
+char* list_add(List *list, char *data, size_t size);
 bool list_insert(List *list, int pos, char *data, size_t size);
 bool list_remove(List *list, unsigned int pos, char *data, size_t size);
 char* list_get(List *list, int pos);

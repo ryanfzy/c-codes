@@ -54,7 +54,7 @@ static void _list_node_link(ListNode *node1, ListNode *node2)
         node2->prev = node1;
 }
 
-bool list_add(List *list, char *data, size_t size)
+char* list_add(List *list, char *data, size_t size)
 {
     if (list != NULL && data != NULL && size > 0)
     {
@@ -67,9 +67,9 @@ bool list_add(List *list, char *data, size_t size)
             list->last = node;
         }
         list->count++;
-        return true;
+        return node->data;
     }
-    return false;
+    return NULL;
 }
 
 ListNode* _list_get(List *list, int pos)

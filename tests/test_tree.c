@@ -10,22 +10,23 @@ typedef struct _TestData
     double dvalue;
 } TestData;
 
-START_TEST(test_tree_create1)
+START_TEST(test_tree_create)
 {
     TestData t;
     t.ivalue = 1;
-    Tree *ptree = tree_create((char*)&t, sizeof(TestData));
+    Tree *tree = tree_create((char*)&t, sizeof(TestData));
 
-    ck_assert_msg(ptree->parent == NULL, "parent is not NULL");
-    ck_assert_msg(ptree->pchildren == NULL, "children is not NULL");
-    ck_assert_msg(ptree->pnode != NULL, "node is NULL");
-    CK_ASSERT_INT_EQ(((TestData*)(ptree->pnode->pdata))->ivalue, 1);
+    ck_assert_msg(tree->parent == NULL, "parent is not NULL");
+    CK_ASSERT_INT_EQ(0, list_count(&tree->children));
+    ck_assert_msg(tree->node != NULL, "node is NULL");
+    TestData *data = (TestData*)tree_get_data(tree);
+    CK_ASSERT_INT_EQ(1, data->ivalue);
 
-    tree_free(ptree);
+    tree_free(tree);
 }
 END_TEST
 
-START_TEST(test_tree_create2)
+START_TEST(test_tree_init)
 {
     TestData t;
     t.ivalue = 1;
@@ -33,9 +34,11 @@ START_TEST(test_tree_create2)
     tree_init(&tree, (char*)&t, sizeof(TestData));
 
     ck_assert_msg(tree.parent == NULL, "parent is not NULL");
-    ck_assert_msg(tree.pchildren == NULL, "children is not NULL");
-    ck_assert_msg(tree.pnode != NULL, "node is NULL");
-    CK_ASSERT_INT_EQ(((TestData*)(tree.pnode->pdata))->ivalue, 1);
+    CK_ASSERT_INT_EQ(0, list_count(&tree.children));
+    ck_assert_msg(tree.node != NULL, "node is NULL");
+    TestData *data = (TestData*)tree_get_data(&tree);
+    CK_ASSERT_INT_EQ(1, data->ivalue);
+
 }
 END_TEST
 
@@ -46,10 +49,10 @@ START_TEST(test_tree_destroy1)
     Tree tree;
     tree_init(&tree, (char*)&t, sizeof(TestData));
     
-    ck_assert_msg(tree.pnode != NULL, "pnode is NULL");
+    ck_assert_msg(tree.node != NULL, "node is NULL");
 
     tree_destroy(&tree);
-    ck_assert_msg(tree.pnode == NULL, "pnode is not NULL");
+    ck_assert_msg(tree.node == NULL, "node is not NULL");
 }
 END_TEST
 
@@ -70,13 +73,14 @@ START_TEST(test_tree_getdata)
 {
     TestData t, *pt;
     t.ivalue = 1;
-    Tree *ptree = tree_create((char*)&t, sizeof(TestData));
-    pt = (TestData*)tree_get_data(ptree);
+    Tree *tree = tree_create((char*)&t, sizeof(TestData));
+    pt = (TestData*)tree_get_data(tree);
 
     ck_assert_msg(&t != pt, "test data is not copied");
-    CK_ASSERT_INT_EQ(pt->ivalue, 1);
-    ck_assert_msg(ptree->pnode != NULL, "pnode is NULL");
-    CK_ASSERT_INT_EQ(((TestData*)(ptree->pnode->pdata))->ivalue, 1);
+    CK_ASSERT_INT_EQ(1, pt->ivalue);
+    ck_assert_msg(tree->node != NULL, "node is NULL");
+    TestData *data = (TestData*)tree_get_data(tree);
+    CK_ASSERT_INT_EQ(1, data->ivalue);
 }
 END_TEST
 
@@ -106,10 +110,9 @@ START_TEST(test_tree_add1)
     Tree *pc = tree_add_child(pa, (char*)&t3, sizeof(TestData));
 
     CK_ASSERT_INT_EQ(tree_children_count(pa), 2);
-    ck_assert_msg(pa->pchildren != NULL, "children is NULL");
-    CK_ASSERT_INT_EQ(((TestData*)tree_get_data(pa))->ivalue, 1);
-    CK_ASSERT_INT_EQ(((TestData*)tree_get_data(pb))->ivalue, 2);
-    CK_ASSERT_INT_EQ(((TestData*)tree_get_data(pc))->ivalue, 3);
+    CK_ASSERT_INT_EQ(1, ((TestData*)tree_get_data(pa))->ivalue);
+    CK_ASSERT_INT_EQ(2, ((TestData*)tree_get_data(pb))->ivalue);
+    CK_ASSERT_INT_EQ(3, ((TestData*)tree_get_data(pc))->ivalue);
 
     ck_assert_msg(tree_get_child(pa, 0) != NULL, "child 0 is NULL");
     ck_assert_msg(tree_get_child(pa, 1) != NULL, "child 1 is NULL");
@@ -120,8 +123,8 @@ START_TEST(test_tree_add1)
     ck_assert_msg(pb->parent == pa, "pb parent is not pa");
     ck_assert_msg(pc->parent == pa, "pc parent is not pa");
 
-    ck_assert_msg(pb->pchildren == NULL, "pb children is not NULL");
-    ck_assert_msg(pc->pchildren == NULL, "pc children is not NULL");
+    CK_ASSERT_INT_EQ(0, list_count(&pb->children));
+    CK_ASSERT_INT_EQ(0, list_count(&pc->children));
 
     tree_free(pa);
     //CK_ASSERT_INT_EQ(((TestData*)tree_get_data(pc))->ivalue, 1);
@@ -141,26 +144,24 @@ START_TEST(test_tree_add2)
     pc = tree_add_child(pb, (char*)&t3, sizeof(TestData));
     pd = tree_add_child(pb, (char*)&t4, sizeof(TestData));
 
-    CK_ASSERT_INT_EQ(tree_children_count(&ta), 1);
-    CK_ASSERT_INT_EQ(((TestData*)tree_get_data(&ta))->ivalue, 1);
+    CK_ASSERT_INT_EQ(1, tree_children_count(&ta));
+    CK_ASSERT_INT_EQ(1, ((TestData*)tree_get_data(&ta))->ivalue);
     ck_assert_msg(tree_has_children(&ta), "ta has no children");
 
-    CK_ASSERT_INT_EQ(tree_children_count(pb), 2);
+    CK_ASSERT_INT_EQ(2, tree_children_count(pb));
     CK_ASSERT_INT_EQ(((TestData*)tree_get_data(pb))->ivalue, 2);
     ck_assert_msg(pb->parent == &ta, "pb parent is not ta");
     ck_assert_msg(tree_has_children(pb), "pa has no children");
 
     ck_assert_msg(tree_get_child(pb, 0) == pc, "pc is not child 0 of pb");
     ck_assert_msg(tree_get_child(pb, 1) == pd, "pd is not child 1 of pb");
-    CK_ASSERT_INT_EQ(((TestData*)tree_get_data(pc))->ivalue, 3);
-    CK_ASSERT_INT_EQ(((TestData*)tree_get_data(pd))->ivalue, 4);
+    CK_ASSERT_INT_EQ(3, ((TestData*)tree_get_data(pc))->ivalue);
+    CK_ASSERT_INT_EQ(4, ((TestData*)tree_get_data(pd))->ivalue);
     ck_assert_msg(pc->parent == pb, "pc parent is not pb");
     ck_assert_msg(pd->parent == pb, "pd parent is not pb");
 
     ck_assert_msg(!tree_has_children(pc), "pc has children");
     ck_assert_msg(!tree_has_children(pd), "pd has chlidren");
-    ck_assert_msg(pc->pchildren == NULL, "pc children is not NULL");
-    ck_assert_msg(pd->pchildren == NULL, "pd children is not NULL");
 
     tree_destroy(&ta);
 }
@@ -180,11 +181,11 @@ START_TEST(test_tree_add3)
     Tree *pd = tree_add_child(pc, (char*)&t4, sizeof(TestData));
     Tree *pe = tree_add_child(pc, (char*)&t5, sizeof(TestData));
 
-    CK_ASSERT_INT_EQ(tree_children_count(pa), 2);
-    CK_ASSERT_INT_EQ(tree_children_count(pb), 0);
-    CK_ASSERT_INT_EQ(tree_children_count(pc), 2);
-    CK_ASSERT_INT_EQ(tree_children_count(pd), 0);
-    CK_ASSERT_INT_EQ(tree_children_count(pe), 0);
+    CK_ASSERT_INT_EQ(2, tree_children_count(pa));
+    CK_ASSERT_INT_EQ(0, tree_children_count(pb));
+    CK_ASSERT_INT_EQ(2, tree_children_count(pc));
+    CK_ASSERT_INT_EQ(0, tree_children_count(pd));
+    CK_ASSERT_INT_EQ(0, tree_children_count(pe));
 
     ck_assert_msg(tree_get_child(pa, 0) == pb, "pb is not child 0 of pa");
     ck_assert_msg(tree_get_child(pa, 1) == pc, "pc is not child 1 of pa");
@@ -199,8 +200,8 @@ Suite* make_add_suit(void)
 {
     Suite *s = suite_create("tree");
     TCase *tc_tree = tcase_create("tree");
-    tcase_add_test(tc_tree, test_tree_create1);
-    tcase_add_test(tc_tree, test_tree_create2);
+    tcase_add_test(tc_tree, test_tree_create);
+    tcase_add_test(tc_tree, test_tree_init);
     tcase_add_test(tc_tree, test_tree_destroy1);
     tcase_add_test(tc_tree, test_tree_destroy2);
     tcase_add_test(tc_tree, test_tree_getdata);
