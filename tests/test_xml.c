@@ -351,6 +351,55 @@ START_TEST(test_11)
 }
 END_TEST
 
+START_TEST(test_11_1)
+{
+    char *test_data = "<tag><subtag /></tag> ";
+    int start_tag_found = 0;
+    Result start_tags[2];
+    int close_tag_found = 0;
+    Result close_tags[2];
+    int attr_found = 0;
+    int text_found = 0;
+    void on_start_found(XmlToken *t)
+    {
+        start_tags[start_tag_found].token = *t;
+        s_memcpy(start_tags[start_tag_found].text, test_data+t->start, t->length);
+        start_tag_found++;
+    }
+    void on_close_found(XmlToken *t)
+    {
+        close_tags[close_tag_found].token = *t;
+        s_memcpy(close_tags[close_tag_found].text, test_data+t->start, t->length);
+        close_tag_found++;
+    }
+    void on_attr_found(XmlToken *k, XmlToken *v)
+    {
+        attr_found++;
+    }
+    void on_text_found(XmlToken *t)
+    {
+        text_found++;
+    }
+    XmlToken token = { 0 };
+    XmlParser parser = xmlparser_create();
+    xmlparser_set_listners(parser, on_start_found, on_attr_found, on_text_found, on_close_found);
+    int i = 0;
+    while (i < strlen(test_data))
+    {
+        CK_ASSERT_TRUE(xmlparser_feed(parser, test_data[i], &i, &token));
+    }
+    xmlparser_free(parser);
+    CK_ASSERT_INT_EQ(2, start_tag_found);
+    CK_ASSERT_STR_EQ("tag", start_tags[0].text);
+    CK_ASSERT_STR_EQ("subtag", start_tags[1].text);
+    CK_ASSERT_INT_EQ(2, close_tag_found);
+    CK_ASSERT_STR_EQ("subtag", close_tags[0].text);
+    CK_ASSERT_STR_EQ("tag", close_tags[1].text);
+    CK_ASSERT_INT_EQ(0, attr_found);
+    CK_ASSERT_INT_EQ(0, text_found);
+}
+END_TEST
+
 START_TEST(test_12)
 {
     char *test_file_path = "..\\test files\\xml_test.txt";
@@ -464,6 +513,7 @@ Suite* make_add_suit(void)
     //tcase_add_test(tc_xml, test_9);
     tcase_add_test(tc_xml, test_10);
     tcase_add_test(tc_xml, test_11);
+    tcase_add_test(tc_xml, test_11_1);
     tcase_add_test(tc_xml, test_12);
     suite_add_tcase(s, tc_xml);
     return s;

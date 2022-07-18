@@ -39,6 +39,7 @@ typedef enum _SemType
 {
     START_TAG = 200,
     CLOSE_TAG,
+    START_CLOSE_TAG,
     ATTR_KEY,
     ATTR_KEY_VAL,
     STEXT,
@@ -66,7 +67,7 @@ static int _expr_list[14][10] =
     {1, EL},
     {2, LEFT_ANGLE, EL1},
     {4, IDENTIFIER, START_TAG, AL, EL2},
-    {3, SLASH, RIGHT_ANGLE, EL3},
+    {4, SLASH, RIGHT_ANGLE, START_CLOSE_TAG, EL3},
     {2, RIGHT_ANGLE, EL3},
     {2, LEFT_ANGLE, EL4},
     {4, TEXT, STEXT, LEFT_ANGLE, EL4},
@@ -249,6 +250,20 @@ static void _invoke_listners(_XmlParser *p, int expr)
             {
                 XmlToken *t = (XmlToken*)list_get(&p->_tokens, -1);
                 p->_start_tag_fn(t);
+                break;
+            }
+        case START_CLOSE_TAG:
+            if (p->_close_tag_fn != NULL)
+            {
+                int i = -1;
+                XmlToken *t = NULL;
+                do
+                {
+                    t = (XmlToken*)list_get(&p->_tokens, i--);
+                }
+                while (t->type != LEFT_ANGLE);
+                t = (XmlToken*)list_get(&p->_tokens, i+2);
+                p->_close_tag_fn(t);
                 break;
             }
         case ATTR_KEY:
